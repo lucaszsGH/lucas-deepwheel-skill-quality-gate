@@ -1,0 +1,28 @@
+name: Validate Skill Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - name: Validate version metadata
+        run: python3 scripts/validate-version.py
+      - name: Validate skill package
+        run: python3 scripts/validate-lucas-deepwheel-skill.py skills/lucas-deepwheel-skill-quality-gate .
+      - name: Validate Quality Gate-specific rules and behavior
+        run: |
+          python3 scripts/validate-lucas-deepwheel-quality-gate.py skills/lucas-deepwheel-skill-quality-gate .
+          python3 -m unittest discover -s tests -p 'test_skill_quality_gate.py' -v
+          python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py skills/lucas-deepwheel-skill-quality-gate --publication-dir .

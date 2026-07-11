@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lucas-DeepWheel Skill Quality Gate"
+  short_description: "Audit Skills for safety, usability, independent product entry, companion routing, and GitHub readiness"
+  default_prompt: "Use $lucas-deepwheel-skill-quality-gate to audit this Skill for safety, usability, independent product entry, companion-skill reminders, token cost, iOS-style interaction, and GitHub readiness."

@@ -1,0 +1,45 @@
+# macOS and editor files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*
+secrets*
+
+# Test, evaluation, and build outputs
+*-workspace/
+test-results/
+tmp/
+.tmp/
+dist/
+*.tmp
+*.log
+*.zip
+.installed-version
+
+# Raw capture and debugging residue
+source.html
+raw.html
+page.html
+debug.log
+curl.err
+headers.txt
+response.dump
+parsed.json
+transcript.tmp
+audio.wav
+audio.mp3
+video.mp4
