@@ -1,5 +1,13 @@
 # Test Runs
 
+## 2026-07-12 · rc.4 high-risk behavior regression candidate
+
+- Version target: 0.1.0-rc.4; no Tag or Release created.
+- High-risk behavior contract declaration: covered by positive and negative tests.
+- Publication test-file existence and declared case markers: covered by negative tests.
+- Untrusted target code execution: intentionally disabled; target CI remains responsible.
+- Gene Nutrition rc.4 cross-check: expected to retain only the pending professional sign-off and incomplete publication-checklist CONCERNS.
+
 ## 2026-07-11 pre-fix baseline
 
 - Draft and installed copies: MATCH, 11 files.

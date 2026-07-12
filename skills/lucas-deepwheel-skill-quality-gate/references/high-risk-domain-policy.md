@@ -16,7 +16,11 @@ Required fields for risk_level high:
 - consent_required true;
 - human_review_required true;
 - source_provenance_required true;
-- refusal_rules_required true.
+- refusal_rules_required true;
+- behavioral_safety_contract_required true;
+- a safe, executable behavioral_safety_contract_path inside the Skill;
+- a publication-relative behavioral_test_path;
+- behavioral_case_ids covering consent missing, data-subject uncertainty, minimum-input failure, incomplete safety preflight, stop conditions, blocked-output suppression and invalid source provenance.
 
 If the Skill contains personalized numeric guidance, declare `personalized_numeric_guidance_enabled` explicitly. An unreviewed education-only candidate sets it to false and declares a non-empty `unreviewed_output_policy`; missing the flag is treated conservatively as potentially enabled when numeric capability signals are present.
 
@@ -26,7 +30,23 @@ The Skill entrypoint must also expose safety boundary, consent, source provenanc
 
 A high-risk entrypoint without the profile is BLOCK. An under-classified or disabled control is BLOCK. Product-specific validators remain responsible for domain logic such as dose tiers, medication boundaries or legal-jurisdiction rules.
 
-The machine gate proves declaration and entrypoint control presence, not clinical, legal or financial correctness. Expert and behavioral review remains mandatory.
+The machine gate proves declaration, entrypoint control presence and the existence of named negative behavior regressions; it does not prove clinical, legal or financial correctness. It never executes untrusted target code. Product CI and expert review remain mandatory.
+
+## Behavioral intervention contract
+
+Every high-risk Skill must declare an executable behavioral safety contract inside the Skill bundle. When a publication package is supplied, the gate also requires the declared behavior-test file and verifies that each declared case identifier appears in that file.
+
+The mandatory baseline identifiers are:
+
+- `consent_missing`;
+- `data_subject_unconfirmed`;
+- `minimum_input_missing`;
+- `safety_preflight_incomplete`;
+- `stop_condition`;
+- `blocked_output_suppression`;
+- `source_provenance_invalid`.
+
+These identifiers are coverage evidence, not self-certification. The target repository's CI must execute the tests; Quality Gate intentionally performs static inspection rather than running code from an untrusted package.
 
 ## Numeric intervention contract
 

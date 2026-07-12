@@ -166,6 +166,15 @@ HIGH_RISK_BOOL_KEYS = (
     "source_provenance_required",
     "refusal_rules_required",
 )
+REQUIRED_HIGH_RISK_BEHAVIOR_CASES = (
+    "consent_missing",
+    "data_subject_unconfirmed",
+    "minimum_input_missing",
+    "safety_preflight_incomplete",
+    "stop_condition",
+    "blocked_output_suppression",
+    "source_provenance_invalid",
+)
 
 
 def finding(severity: str, title: str, detail: str) -> dict[str, str]:
@@ -177,6 +186,15 @@ def safe_relative(path: Path, root: Path) -> str:
         return str(path.relative_to(root))
     except ValueError:
         return "<outside-target>"
+
+
+def safe_declared_path(value: object) -> Path | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    relative = Path(value)
+    if relative.is_absolute() or ".." in relative.parts:
+        return None
+    return relative
 
 
 def iter_paths(root: Path) -> Iterable[Path]:
@@ -363,6 +381,67 @@ def check_risk_profile(
                     "declare unreviewed_output_policy",
                 )
             )
+        if profile.get("behavioral_safety_contract_required") is not True:
+            findings.append(
+                finding(
+                    "critical",
+                    "high-risk behavioral safety contract is not required",
+                    "enable behavioral_safety_contract_required",
+                )
+            )
+        behavior_contract = safe_declared_path(profile.get("behavioral_safety_contract_path"))
+        if behavior_contract is None:
+            findings.append(
+                finding(
+                    "critical",
+                    "behavioral safety contract path is invalid",
+                    "use a safe relative path",
+                )
+            )
+        elif not (skill / behavior_contract).is_file() or (skill / behavior_contract).is_symlink():
+            findings.append(
+                finding(
+                    "critical",
+                    "behavioral safety contract file is missing",
+                    str(behavior_contract),
+                )
+            )
+        elif not ((skill / behavior_contract).stat().st_mode & 0o100):
+            findings.append(
+                finding(
+                    "critical",
+                    "behavioral safety contract is not executable",
+                    str(behavior_contract),
+                )
+            )
+        behavior_test = safe_declared_path(profile.get("behavioral_test_path"))
+        if behavior_test is None:
+            findings.append(
+                finding(
+                    "critical",
+                    "high-risk behavioral test path is invalid",
+                    "declare a safe publication-relative test path",
+                )
+            )
+        case_ids = profile.get("behavioral_case_ids")
+        if not isinstance(case_ids, list) or any(not isinstance(item, str) for item in case_ids):
+            findings.append(
+                finding(
+                    "critical",
+                    "high-risk behavioral case identifiers are invalid",
+                    "declare behavioral_case_ids as a string list",
+                )
+            )
+        else:
+            missing_cases = [item for item in REQUIRED_HIGH_RISK_BEHAVIOR_CASES if item not in case_ids]
+            if missing_cases:
+                findings.append(
+                    finding(
+                        "critical",
+                        "high-risk behavior regression coverage is incomplete",
+                        ", ".join(missing_cases),
+                    )
+                )
         if has_numeric_safety_signal(all_text):
             if profile.get("numeric_safety_contract_required") is not True:
                 findings.append(
@@ -372,14 +451,8 @@ def check_risk_profile(
                         "enable numeric_safety_contract_required",
                     )
                 )
-            contract_path = profile.get("numeric_contract_path")
-            relative = Path(contract_path) if isinstance(contract_path, str) else None
-            safe_relative = (
-                relative is not None
-                and not relative.is_absolute()
-                and ".." not in relative.parts
-            )
-            if not safe_relative:
+            relative = safe_declared_path(profile.get("numeric_contract_path"))
+            if relative is None:
                 findings.append(
                     finding("critical", "numeric safety contract path is invalid", "use a safe relative path")
                 )
@@ -579,6 +652,40 @@ def check_publication(
     except (json.JSONDecodeError, OSError):
         publication_profile = {}
     if publication_profile.get("risk_level") == "high":
+        behavior_test = safe_declared_path(publication_profile.get("behavioral_test_path"))
+        if behavior_test is None:
+            findings.append(
+                finding(
+                    "critical",
+                    "high-risk publication behavioral test path is invalid",
+                    "declare behavioral_test_path in agents/risk-profile.json",
+                )
+            )
+        elif not (publication / behavior_test).is_file() or (publication / behavior_test).is_symlink():
+            findings.append(
+                finding(
+                    "critical",
+                    "high-risk behavior regression test file is missing",
+                    str(behavior_test),
+                )
+            )
+        else:
+            test_text = read_text(publication / behavior_test)
+            declared_cases = publication_profile.get("behavioral_case_ids")
+            expected_cases = (
+                [item for item in declared_cases if isinstance(item, str)]
+                if isinstance(declared_cases, list)
+                else list(REQUIRED_HIGH_RISK_BEHAVIOR_CASES)
+            )
+            missing_markers = [item for item in expected_cases if item not in test_text]
+            if missing_markers:
+                findings.append(
+                    finding(
+                        "critical",
+                        "high-risk behavior regression tests lack declared cases",
+                        ", ".join(missing_markers),
+                    )
+                )
         _, skill_publication_text = scan_tree(skill)
         numeric_publication = (
             has_numeric_safety_signal(skill_publication_text)
