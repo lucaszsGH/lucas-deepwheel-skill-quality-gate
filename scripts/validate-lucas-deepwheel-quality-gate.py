@@ -45,6 +45,7 @@ REQUIRED_SCANNER_TERMS = (
     "numeric_safety_contract_required",
     "INTRO_ASSET_SUFFIXES",
     "publication checklist has incomplete items",
+    "high-risk professional sign-off is incomplete",
     "deduplicate",
     "raise SystemExit(main())",
     'return 2',

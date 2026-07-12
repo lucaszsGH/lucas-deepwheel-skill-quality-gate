@@ -542,6 +542,32 @@ def check_publication(
                 )
             )
 
+    profile_path = skill / "agents" / "risk-profile.json"
+    try:
+        publication_profile = (
+            json.loads(read_text(profile_path)) if profile_path.is_file() else {}
+        )
+    except (json.JSONDecodeError, OSError):
+        publication_profile = {}
+    if publication_profile.get("risk_level") == "high":
+        signoff = publication / "docs" / "PROFESSIONAL-SIGNOFF.md"
+        if not signoff.is_file():
+            findings.append(
+                finding(
+                    "warning",
+                    "high-risk professional sign-off is missing",
+                    "docs/PROFESSIONAL-SIGNOFF.md",
+                )
+            )
+        elif not re.search(r"(?im)^Status:\s*APPROVED\s*$", read_text(signoff)):
+            findings.append(
+                finding(
+                    "warning",
+                    "high-risk professional sign-off is incomplete",
+                    "docs/PROFESSIONAL-SIGNOFF.md must record Status: APPROVED",
+                )
+            )
+
     intro_dir = publication / "assets" / "intro"
     intro_names = (
         [path.name for path in intro_dir.iterdir() if path.is_file()]

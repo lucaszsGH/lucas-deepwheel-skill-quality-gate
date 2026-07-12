@@ -29,3 +29,7 @@ The machine gate proves declaration and entrypoint control presence, not clinica
 ## Numeric intervention contract
 
 If a high-risk Skill promises dose, supplement amount, intake amount or upper-limit comparison, its risk profile must enable numeric_safety_contract_required and point numeric_contract_path to a real, non-symlink file inside the Skill. Missing declarations or files return BLOCK. The product-specific validator must still prove unit normalization, source metadata, upper-limit comparison and negative behavior.
+
+## Public-release sign-off
+
+A high-risk publication package must include `docs/PROFESSIONAL-SIGNOFF.md`. Only an explicit `Status: APPROVED` may satisfy this gate. Missing or pending sign-off returns CONCERNS; structural checks and machine tests cannot self-approve a high-risk public release.

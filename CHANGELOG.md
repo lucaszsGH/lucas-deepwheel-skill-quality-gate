@@ -11,6 +11,7 @@
 - Require a machine contract for numeric high-risk guidance.
 - Prevent CLEAN when the publication checklist still contains incomplete items.
 - Require a recorded review document in the DeepWheel publication baseline.
+- Require explicit approved professional sign-off before a high-risk package can return CLEAN publication readiness.
 
 All notable user-visible changes are recorded here.
 

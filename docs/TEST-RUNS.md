@@ -39,7 +39,7 @@ Result: PASS.
 
 - Version metadata: PASS for 0.1.0-rc.2
 - Generic and product-specific validators: PASS
-- Behavior tests: 19 PASS
+- Behavior tests: 20 PASS
 - Self-audit: CLEAN
 - High-risk Skill without risk profile: BLOCK
 - High-risk Skill missing entrypoint boundary: BLOCK
@@ -51,3 +51,4 @@ Result: PASS.
 - Numeric high-risk guidance without a machine contract: BLOCK
 - Non-executable numeric safety contract: BLOCK
 - Incomplete publication checklist: CONCERNS
+- Missing or pending high-risk professional sign-off: CONCERNS; explicit APPROVED sign-off: CLEAN
