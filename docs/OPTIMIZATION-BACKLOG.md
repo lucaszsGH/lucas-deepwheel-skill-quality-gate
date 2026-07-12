@@ -5,21 +5,26 @@
 
 ## 待修
 
-### O1 · 章节检测太关键词化，误伤合规域 Skill（P1，影响判准）
-- **现象**：`check_core_sections` 找精确标题「标准流程 / 完成前验收 / 什么时候不要使用」等;域 Skill 合理地叫「生成流程 / 交付前自检 / 什么时候不用」就被报 WARNING。审 `deepwheel-brand`(自包含、合规)时误报多条。
-- **改法建议**：章节检测认**语义等价集**（如 标准流程≈生成流程≈工作流程；完成前验收≈交付前自检≈自检清单；什么时候不用≈什么时候不要使用≈不适用）;或从关键词匹配升级为"是否存在‘流程类/自检类/边界类’段落"的意图判断。
-- **发现**：2026-07-12 审 deepwheel-brand。
+### O5 · references「一层深」规则对大型域 Skill 太严（P2，判准）
+- **现象**：`check_skill` 对 `references/` 下有子目录即报 WARNING「references are nested」。但完整规范型 Skill（如 lucas-deepwheel-brand-apply 内嵌手册 18 模块 + 图鉴 37 型 = 55 文件）必须按 `规范全集/`、`图形规格/型名/` 分层组织,拍平不可行。
+- **改法建议**：允许一个「白名单子目录」层（如 references 下的分组目录不算违规），或从 risk-profile 读 `bundled_spec: true` 时豁免嵌套检查。
+- **发现**：2026-07-13 审 lucas-deepwheel-brand-apply。
 
-### O2 · 不区分「工具 Skill」与「域 Skill」，强套工具类检查（P1，影响判准）
-- **现象**：对自包含品牌应用 Skill 也检查 OCR/音频/安装体检、token 分段策略、companion Skill 路由——这些对不涉文件处理/无外部工具依赖的域 Skill 本就 N/A,却报 WARNING。
-- **改法建议**：读目标 Skill 的 `agents/risk-profile.json` 的 `domains` / 新增一个 `skill_type`(tool / domain / meta) 字段判类型;**工具类才查 OCR/token/companion，域类跳过或降为 NOTE**。缺 risk-profile 时保守按现状全查。
-- **发现**：2026-07-12 审 deepwheel-brand（9 条 WARNING 里约 5 条属此类）。
-
-### O3 · description 长度/边界检查可再宽容折叠换行（P2，观察）
-- 折叠解析已修（见已修 F1）。后续可留意：超长折叠描述折叠成单行后可能逼近 1024 上限的边界情形，必要时给出更精确的"折叠后长度"提示。
+### O6 · 新检查(命名/skill_type/同义章节)缺自动测试（P1，工程质量）
+- F2/F3/F4 三项新行为(见已修)当前靠手动验 + 24 原测试兜底,未加专门单测。
+- **改法建议**：给 tests/ 补：①命名前缀设/未设两态 ②domain skill 工具类检查降 NOTE ③CORE_GROUPS 同义词识别。命名测试需给 `run_gate` 加 `env=` 参数支持。
 
 ## 已修
 
 ### F1 · description 只认双引号单行 → 折叠/字面/单引号/无引号误判 BLOCK（已修 b210906，2026-07-12）
-- `parse_frontmatter` 原正则 `^description:\s*"(.*)"` 只认双引号单行;折叠 `description: >`(skill-creator 示例常用)被读成空 → "description length is invalid" 假 BLOCK。
-- 改：加 `_extract_scalar` 兼容 双/单引号、折叠(>)、字面(|)、无引号;顶层键检查忽略缩进续行。24 测试全过、闸自审仍 CLEAN。
+- 加 `_extract_scalar` 兼容五种 YAML 标量;顶层键检查忽略缩进续行。24 测试全过。
+
+### F2 · O1 章节检测太关键词化,误伤合规域 Skill（已修，2026-07-13）
+- `CORE_GROUPS` 每组补语义同义词:标准流程≈生成流程/工作流程/how it works;完成前验收≈交付前自检/自检清单/pre-flight;什么时候不用≈什么时候不要使用;+英文别名。合规域 Skill 用不同措辞不再误报。
+
+### F3 · O2 不区分工具/域 Skill,强套工具类检查（已修，2026-07-13）
+- 新增 `TOOL_ONLY_POLICY`(OCR体检/token/companion/独立入口)+ 读 risk-profile 的 `skill_type`;`skill_type=domain` 时这四项由 WARNING 降为 NOTE。自包含域 Skill 不再被工具类检查拖成 CONCERNS。
+
+### F4 · ③ 新增命名规则检查（已修，2026-07-13）
+- 环境变量 `SKILL_QUALITY_GATE_NAME_PREFIX`:配了→核验目标 Skill name 是否遵此前缀(不遵=WARNING);没配→提醒「建立统一命名规则」(NOTE)。即「我用核验我的规则(设 lucas-deepwheel-)、别人用提醒建统一规则」。
+- 手动验:设 `lucas-deepwheel-` 审 lucas-deepwheel-brand-apply=过、审自己=CLEAN;未设=出提醒 NOTE。

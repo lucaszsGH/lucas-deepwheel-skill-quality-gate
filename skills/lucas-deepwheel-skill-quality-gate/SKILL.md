@@ -128,6 +128,15 @@ python3 scripts/reconcile_release_state.py /path/to/repository --json
 
 扫描结果只报告类别和相对文件名，不输出匹配到的敏感值或目标机器的绝对路径。
 
+## 命名规则与 Skill 类型（2026-07-13 新增）
+
+- **命名规则检查**：设环境变量 `SKILL_QUALITY_GATE_NAME_PREFIX`（如 `lucas-deepwheel-`）即核验目标 Skill 的 `name` 是否遵此前缀，不遵报 WARNING；不设则报 NOTE 提醒「建立一套统一命名规则」。即：**你自己用就核验你的命名规则；别人用就提醒他建立统一规则**。
+  ```bash
+  SKILL_QUALITY_GATE_NAME_PREFIX="lucas-deepwheel-" python3 scripts/skill_quality_gate.py /path/to/target-skill
+  ```
+- **Skill 类型感知**：目标 Skill 的 `agents/risk-profile.json` 可声明 `skill_type`（`tool` / `domain` / `meta`）。`skill_type=domain`（自包含域 Skill，如品牌应用）时，工具类策略检查（新用户能力体检 OCR/音频、token 预算、关联 Skill 路由、独立入口）由 WARNING 降为 NOTE，避免误伤合规域 Skill；缺声明按保守全查。
+- **章节检测**认语义等价（标准流程≈生成流程、完成前验收≈交付前自检、什么时候不用≈什么时候不要使用等），不因措辞不同误报缺章节。
+
 ## 输出标准
 
 输出必须包含：

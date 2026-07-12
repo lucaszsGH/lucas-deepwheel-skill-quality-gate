@@ -5,6 +5,9 @@
 - Ignore the installer's `.installed-version` metadata when comparing source and installed Skill bodies.
 - Add a regression test proving an otherwise identical installation remains `MATCH` when the version marker is present.
 - Allow an internal-only public-surface review to record `NO_CHANGE_REQUIRED` without claiming that bilingual images changed.
+- **Naming-convention check**: set `SKILL_QUALITY_GATE_NAME_PREFIX` (e.g. `lucas-deepwheel-`) to verify a target Skill's `name` starts with it (WARNING if not); when unset, a NOTE reminds to establish one unified naming rule. "Verify my own rule when I run it; remind others to set a unified rule."
+- **Skill-type awareness**: read `skill_type` (`tool` / `domain` / `meta`) from the target's `agents/risk-profile.json`; for `domain` Skills the tool-only policy checks (new-user OCR/audio preflight, token budget, companion routing, independent entry) are downgraded from WARNING to NOTE, so self-contained domain Skills aren't dragged to CONCERNS by inapplicable checks.
+- **Semantic section detection**: `CORE_GROUPS` now accepts synonyms (标准流程≈生成流程, 完成前验收≈交付前自检, 什么时候不用≈什么时候不要使用, + English aliases), so compliant Skills that phrase sections differently no longer trigger false "missing core section" warnings.
 
 ## [0.1.0-rc.5] - 2026-07-12
 

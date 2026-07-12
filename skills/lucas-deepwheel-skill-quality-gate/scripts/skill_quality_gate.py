@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import re
 from typing import Iterable
@@ -127,11 +128,11 @@ INTRO_ASSET_SUFFIXES = (
 )
 
 CORE_GROUPS = (
-    ("什么时候使用", "使用本 Skill", "使用边界"),
-    ("什么时候不要使用", "不使用本 Skill", "不使用"),
-    ("标准流程",),
-    ("安全边界",),
-    ("完成前验收",),
+    ("什么时候使用", "使用本 Skill", "使用边界", "适用边界", "Use when"),
+    ("什么时候不要使用", "不使用本 Skill", "不使用", "什么时候不用", "Do not use"),
+    ("标准流程", "生成流程", "工作流程", "使用流程", "how it works"),
+    ("安全边界", "safety boundary"),
+    ("完成前验收", "交付前自检", "自检清单", "交付前", "pre-flight", "pre-delivery"),
 )
 
 POLICY_GROUPS = {
@@ -142,6 +143,18 @@ POLICY_GROUPS = {
     "interaction and onboarding": ("首次", "下一步", "恢复", "渐进", "用户"),
     "capability claims": ("已支持", "需要工具", "暂不承诺"),
 }
+
+# O2:工具类 Skill 才需要的策略检查;自包含域 Skill(risk-profile skill_type=domain)对这些 N/A,降为 NOTE
+TOOL_ONLY_POLICY = frozenset({
+    "new user capability preflight",
+    "token budget policy",
+    "companion Skill routing",
+    "independent product entry",
+})
+
+# ③ 命名规则:环境变量配置期望前缀(如 "lucas-deepwheel-")。
+# 配了 → 核验目标 Skill 名是否遵此前缀(不遵=WARNING);没配 → 提醒建立统一命名规则(NOTE)。
+NAME_PREFIX_ENV = "SKILL_QUALITY_GATE_NAME_PREFIX"
 
 HIGH_RISK_ENGLISH_TERMS = (
     "medical", "genetic", "nutrition", "clinical", "diagnosis", "treatment",
@@ -652,6 +665,28 @@ def check_skill(skill: Path) -> tuple[list[dict[str, str]], str | None]:
                         "frontmatter name must equal the Skill folder name",
                     )
                 )
+            # ③ 命名规则:配了前缀 → 核验遵守;没配 → 提醒建立统一命名规则
+            name_prefix = os.environ.get(NAME_PREFIX_ENV, "").strip()
+            if name_prefix:
+                if not skill_name.startswith(name_prefix):
+                    findings.append(
+                        finding(
+                            "warning",
+                            "Skill name does not follow the configured naming convention",
+                            f"expected name to start with {name_prefix!r} "
+                            f"(configured via {NAME_PREFIX_ENV})",
+                        )
+                    )
+            else:
+                findings.append(
+                    finding(
+                        "note",
+                        "no naming convention configured",
+                        "establish ONE unified naming rule for your Skills "
+                        f"(e.g. <org>-<domain>-<purpose>); set {NAME_PREFIX_ENV} "
+                        "to enforce and verify your own rule",
+                    )
+                )
             if not (1 <= len(description) <= 1024):
                 findings.append(
                     finding(
@@ -720,13 +755,27 @@ def check_skill(skill: Path) -> tuple[list[dict[str, str]], str | None]:
             )
         )
 
+    # O2:读 skill_type;自包含域 Skill 对工具类策略检查(OCR/token/companion/独立入口)N/A,降为 NOTE
+    skill_type = ""
+    _rp = skill / "agents" / "risk-profile.json"
+    if _rp.is_file():
+        try:
+            skill_type = str(json.loads(read_text(_rp)).get("skill_type", "")).lower()
+        except (json.JSONDecodeError, OSError):
+            skill_type = ""
+
     lower_text = all_text.lower()
     for label, terms in POLICY_GROUPS.items():
         missing = [term for term in terms if term.lower() not in lower_text]
         if missing:
+            severity = (
+                "note"
+                if skill_type == "domain" and label in TOOL_ONLY_POLICY
+                else "warning"
+            )
             findings.append(
                 finding(
-                    "warning",
+                    severity,
                     f"missing or weak {label}",
                     ", ".join(missing),
                 )
