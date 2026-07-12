@@ -53,3 +53,16 @@ Result: PASS.
 - Incomplete publication checklist: CONCERNS
 - Missing or pending high-risk professional sign-off: CONCERNS; explicit APPROVED sign-off: CLEAN
 - Approved sign-off with a stale or mismatched Skill fingerprint: CONCERNS
+
+## 2026-07-12 · unreviewed numeric-publication hard gate
+
+- Version metadata: PASS for 0.1.0-rc.3
+- Generic and product-specific validators: PASS
+- Behavior tests: 20 PASS
+- Self-audit with publication package: CLEAN
+- High-risk personalized numeric publication with missing or pending sign-off: BLOCK
+- High-risk personalized numeric publication with stale approved fingerprint: BLOCK
+- Explicitly education-only, personalized-numeric-disabled high-risk candidate with pending sign-off: CONCERNS
+- Gene Nutrition 0.1.0-rc.2 local candidate: CONCERNS with exactly two expected open items and no critical findings
+- Gene Nutrition numeric draft fixture: refused while unreviewed
+- Current Quality Gate changes: local source only; not committed or pushed

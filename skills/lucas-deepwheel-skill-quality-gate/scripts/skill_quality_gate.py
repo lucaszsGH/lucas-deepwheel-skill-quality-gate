@@ -346,6 +346,23 @@ def check_risk_profile(
                 findings.append(
                     finding("critical", "high-risk control is disabled", key)
                 )
+        numeric_enabled = profile.get("personalized_numeric_guidance_enabled")
+        if numeric_enabled is not None and not isinstance(numeric_enabled, bool):
+            findings.append(
+                finding(
+                    "critical",
+                    "numeric guidance enablement flag is invalid",
+                    "personalized_numeric_guidance_enabled must be true or false",
+                )
+            )
+        if numeric_enabled is False and not str(profile.get("unreviewed_output_policy", "")).strip():
+            findings.append(
+                finding(
+                    "critical",
+                    "disabled numeric guidance lacks an unreviewed output policy",
+                    "declare unreviewed_output_policy",
+                )
+            )
         if has_numeric_safety_signal(all_text):
             if profile.get("numeric_safety_contract_required") is not True:
                 findings.append(
@@ -562,13 +579,21 @@ def check_publication(
     except (json.JSONDecodeError, OSError):
         publication_profile = {}
     if publication_profile.get("risk_level") == "high":
+        _, skill_publication_text = scan_tree(skill)
+        numeric_publication = (
+            has_numeric_safety_signal(skill_publication_text)
+            and publication_profile.get("personalized_numeric_guidance_enabled") is not False
+        )
+        signoff_severity = "critical" if numeric_publication else "warning"
         signoff = publication / "docs" / "PROFESSIONAL-SIGNOFF.md"
         if not signoff.is_file():
             findings.append(
                 finding(
-                    "warning",
+                    signoff_severity,
                     "high-risk professional sign-off is missing",
-                    "docs/PROFESSIONAL-SIGNOFF.md",
+                    "numeric high-risk publication is blocked without approval"
+                    if numeric_publication
+                    else "docs/PROFESSIONAL-SIGNOFF.md",
                 )
             )
         else:
@@ -576,9 +601,11 @@ def check_publication(
             if not re.search(r"(?im)^Status:\s*APPROVED\s*$", signoff_text):
                 findings.append(
                     finding(
-                        "warning",
+                        signoff_severity,
                         "high-risk professional sign-off is incomplete",
-                        "docs/PROFESSIONAL-SIGNOFF.md must record Status: APPROVED",
+                        "numeric high-risk publication is blocked until docs/PROFESSIONAL-SIGNOFF.md records Status: APPROVED"
+                        if numeric_publication
+                        else "docs/PROFESSIONAL-SIGNOFF.md must record Status: APPROVED",
                     )
                 )
             else:
@@ -589,9 +616,11 @@ def check_publication(
                 if target_match is None or target_match.group(1) != tree_sha256(skill):
                     findings.append(
                         finding(
-                            "warning",
+                            signoff_severity,
                             "professional sign-off target does not match current Skill",
-                            "record the current --print-skill-sha256 value",
+                            "numeric high-risk publication is blocked until the approved fingerprint matches"
+                            if numeric_publication
+                            else "record the current --print-skill-sha256 value",
                         )
                     )
 

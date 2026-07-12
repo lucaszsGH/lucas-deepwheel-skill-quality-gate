@@ -18,6 +18,8 @@ Required fields for risk_level high:
 - source_provenance_required true;
 - refusal_rules_required true.
 
+If the Skill contains personalized numeric guidance, declare `personalized_numeric_guidance_enabled` explicitly. An unreviewed education-only candidate sets it to false and declares a non-empty `unreviewed_output_policy`; missing the flag is treated conservatively as potentially enabled when numeric capability signals are present.
+
 The Skill entrypoint must also expose safety boundary, consent, source provenance, stop conditions and review routing. A disclaimer alone is insufficient.
 
 ## Gate behavior
@@ -32,4 +34,6 @@ If a high-risk Skill promises dose, supplement amount, intake amount or upper-li
 
 ## Public-release sign-off
 
-A high-risk publication package must include `docs/PROFESSIONAL-SIGNOFF.md`. Only an explicit `Status: APPROVED` plus a `Target Skill SHA256` matching the current packaged Skill may satisfy this gate. Compute the deterministic fingerprint with `--print-skill-sha256`. Missing, pending, malformed or stale sign-off returns CONCERNS; structural checks and machine tests cannot self-approve a high-risk public release.
+A high-risk publication package must include `docs/PROFESSIONAL-SIGNOFF.md`. Only an explicit `Status: APPROVED` plus a `Target Skill SHA256` matching the current packaged Skill may satisfy this gate. Compute the deterministic fingerprint with `--print-skill-sha256`.
+
+For a high-risk package with personalized numeric guidance enabled—or with numeric capability signals but no explicit false enablement flag—missing, pending, malformed or stale sign-off returns BLOCK. A clearly declared education-only candidate with personalized numeric guidance disabled remains CONCERNS until professional sign-off. A disclaimer alone never unlocks numeric publication; structural checks and machine tests cannot self-approve a high-risk public release.

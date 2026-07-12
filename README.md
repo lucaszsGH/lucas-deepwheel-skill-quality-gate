@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Status: public release candidate; current version 0.1.0-rc.1.
+Status: public release candidate; current version 0.1.0-rc.3.
 
 ![DeepWheel Skill Quality Gate: gate with evidence and release with confidence](assets/intro/quality-gate-hero-en.png)
 
@@ -114,3 +114,5 @@ MIT License. See [LICENSE](LICENSE).
 A Skill whose entrypoint covers health, medical, genetic, nutrition, legal or financial decisions must provide agents/risk-profile.json. Missing or under-classified consent, human-review, provenance or refusal controls returns BLOCK.
 
 The machine gate verifies declared fields and the presence of entrypoint controls; it does not prove that domain logic is correct. High-risk Skills still require expert and behavioral review.
+
+For a high-risk publication that enables personalized numeric guidance, a missing, pending or stale professional sign-off returns BLOCK. An explicitly education-only candidate with personalized numeric guidance disabled remains CONCERNS until sign-off. A disclaimer does not unlock numeric guidance.
