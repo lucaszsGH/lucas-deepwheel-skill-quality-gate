@@ -1,6 +1,8 @@
 # Lucas-DeepWheel Skill Quality Gate
 
-Status: local source release candidate; no GitHub repository or public release has been created.
+Status: private-repository release candidate; not publicly published.
+
+![DeepWheel Skill Quality Gate: gate with evidence and release with confidence](assets/intro/quality-gate-hero-en.png)
 
 ## What it does
 
@@ -18,6 +20,8 @@ It checks:
 - whether machine findings can correctly block CI.
 
 It does not execute the target Skill's business actions and does not replace real behavior tests or human review.
+
+![Skill Quality Gate workflow from a Skill package to an evidence-backed verdict](assets/intro/quality-gate-workflow-en.png)
 
 ## Quick Start
 

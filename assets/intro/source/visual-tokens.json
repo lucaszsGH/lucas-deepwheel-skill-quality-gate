@@ -1,0 +1,33 @@
+{
+  "$meta": {
+    "name": "Capture GitHub bilingual intro tokens",
+    "basis": "DeepWheel brand book current machine-readable tokens",
+    "canvas": "1600x900",
+    "status": "working"
+  },
+  "color": {
+    "ink": "#101722",
+    "blue": "#0071E3",
+    "blue_hover": "#0A47B1",
+    "body": "#42474F",
+    "caption": "#5C626B",
+    "mist": "#F2F5F9",
+    "hairline": "#E1E6EE",
+    "white": "#FFFFFF",
+    "aura": "radial-gradient(135% 115% at 100% 0%, #DFEAF7 0%, #ECF2FB 26%, #F6F9FC 55%, #FBFBFB 100%)"
+  },
+  "typography": {
+    "english": "Avenir Next, Inter, Helvetica Neue, Arial, sans-serif",
+    "chinese": "PingFang SC, -apple-system, sans-serif",
+    "display_weight": 600,
+    "body_weight": 400
+  },
+  "layout": {
+    "columns": 12,
+    "margin": 64,
+    "gutter": 24,
+    "baseline": 8,
+    "preferred_ratio": "8:4",
+    "blue_budget": "<=10%"
+  }
+}
