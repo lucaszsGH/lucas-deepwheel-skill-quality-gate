@@ -85,11 +85,13 @@ PII_PATTERNS = {
     ),
 }
 
+# Lucas-DeepWheel family publication baseline. Product-specific CLI docs,
+# release templates, validators, and test filenames must not be required
+# for every Skill in the family. Third-party packages may need a tailored baseline.
 REQUIRED_PUBLICATION_FILES = (
     ".gitattributes",
     ".gitignore",
     ".github/PULL_REQUEST_TEMPLATE.md",
-    ".github/RELEASE_TEMPLATE.md",
     ".github/workflows/validate.yml",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
@@ -98,18 +100,15 @@ REQUIRED_PUBLICATION_FILES = (
     "README.zh-CN.md",
     "SECURITY.md",
     "VERSION",
-    "docs/CLI.md",
     "docs/INSTALLATION.md",
     "docs/PUBLICATION-CHECKLIST.md",
     "docs/TEST-RUNS.md",
     "docs/VERSIONING.md",
     "examples/example-prompts.md",
     "scripts/install-local.py",
-    "scripts/validate-lucas-deepwheel-quality-gate.py",
     "scripts/validate-lucas-deepwheel-skill.py",
     "scripts/validate-version.py",
     "scripts/verify-installed-copy.py",
-    "tests/test_skill_quality_gate.py",
 )
 
 CORE_GROUPS = (

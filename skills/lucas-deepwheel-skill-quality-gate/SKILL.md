@@ -87,6 +87,8 @@ GitHub 发布准备检查
 
 ## 机器门禁
 
+当前发布包文件基线面向 Lucas-DeepWheel 家族仓库。审计第三方 Skill 时，应先确认或定制发布基线，不把 `README.zh-CN.md` 等家族文件缺失直接当作安全阻断。
+
 从 Quality Gate Skill 目录运行：
 
 ```bash

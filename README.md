@@ -8,6 +8,8 @@ Status: private-repository release candidate; not publicly published.
 
 Skill Quality Gate audits an Agent Skill and, optionally, its publication package before installation or release.
 
+The default publication-file baseline is designed for Lucas-DeepWheel family repositories. Third-party Skills may need a tailored baseline instead of treating family-specific file omissions as release blockers.
+
 It checks:
 
 - structure and frontmatter;

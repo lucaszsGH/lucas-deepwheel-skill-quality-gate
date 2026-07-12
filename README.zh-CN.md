@@ -8,6 +8,8 @@
 
 Skill Quality Gate 用于在安装或发布前检查一个 Agent Skill，以及可选的 GitHub 发布包。
 
+默认发布文件基线面向 Lucas-DeepWheel 家族仓库。检查第三方 Skill 时，应先定制适合它的基线，不把家族专属文件缺失直接当成发布阻断。
+
 它会检查：
 
 - 结构与 frontmatter；
