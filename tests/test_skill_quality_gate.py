@@ -322,6 +322,56 @@ class QualityGateBehaviorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("publication checklist has incomplete items", result.stdout)
 
+    def test_high_risk_publication_requires_approved_professional_signoff(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target = publication / "skills" / SKILL_NAME
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a health nutrition genetic Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "genetics", "nutrition"],
+                "sensitive_data": ["genetic_data", "health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+                "numeric_safety_contract_required": True,
+                "numeric_contract_path": "scripts/case_contract.py",
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            contract = target / "scripts" / "case_contract.py"
+            contract.write_text("print('synthetic contract')\n", encoding="utf-8")
+            contract.chmod(contract.stat().st_mode | 0o100)
+            signoff = publication / "docs" / "PROFESSIONAL-SIGNOFF.md"
+            signoff.write_text("# Sign-off\n\nStatus: PENDING\n", encoding="utf-8")
+            pending = run_gate(
+                str(target),
+                "--publication-dir",
+                str(publication),
+            )
+            signoff.write_text("# Sign-off\n\nStatus: APPROVED\n", encoding="utf-8")
+            approved = run_gate(
+                str(target),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(pending.returncode, 1, pending.stdout + pending.stderr)
+        self.assertIn("high-risk professional sign-off is incomplete", pending.stdout)
+        self.assertEqual(approved.returncode, 0, approved.stdout + approved.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", approved.stdout)
+
     def test_complete_publication_package_is_clean(self) -> None:
         result = run_gate(str(SKILL), "--publication-dir", str(ROOT))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
