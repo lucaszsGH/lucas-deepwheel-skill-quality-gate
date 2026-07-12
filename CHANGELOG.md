@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0-rc.4] - 2026-07-12
+
+- Require every high-risk Skill to declare an executable behavioral safety contract.
+- Require publication packages to expose a static behavior-test path and seven baseline negative-case identifiers.
+- Block missing or incomplete consent, data-subject, minimum-input, safety-preflight, stop-routing, blocked-output and source-provenance regression evidence.
+- Keep target-code execution in the target repository CI rather than running untrusted code inside Quality Gate.
+
 ## [0.1.0-rc.3] - 2026-07-12
 
 - Block public release of high-risk personalized numeric guidance when professional sign-off is missing, pending or stale.

@@ -33,6 +33,7 @@ REQUIRED_TERMS = (
     "7 角色",
     "敏感值",
     "相对文件名",
+    "行为安全合同",
 )
 
 REQUIRED_SCANNER_TERMS = (
@@ -43,6 +44,10 @@ REQUIRED_SCANNER_TERMS = (
     "check_risk_profile",
     "has_numeric_safety_signal",
     "numeric_safety_contract_required",
+    "behavioral_safety_contract_required",
+    "REQUIRED_HIGH_RISK_BEHAVIOR_CASES",
+    "high-risk behavior regression test file is missing",
+    "high-risk behavior regression tests lack declared cases",
     "INTRO_ASSET_SUFFIXES",
     "publication checklist has incomplete items",
     "high-risk professional sign-off is incomplete",
@@ -128,6 +133,18 @@ if publication is not None:
     test_file = publication / "tests" / "test_skill_quality_gate.py"
     if not test_file.is_file():
         fail("behavior test file is missing")
+    test_text = test_file.read_text(encoding="utf-8")
+    for marker in (
+        "consent_missing",
+        "data_subject_unconfirmed",
+        "minimum_input_missing",
+        "safety_preflight_incomplete",
+        "stop_condition",
+        "blocked_output_suppression",
+        "source_provenance_invalid",
+    ):
+        if marker not in test_text:
+            fail(f"behavior test file misses high-risk marker: {marker}")
     workflow = publication / ".github" / "workflows" / "validate.yml"
     if not workflow.is_file():
         fail("validation workflow is missing")

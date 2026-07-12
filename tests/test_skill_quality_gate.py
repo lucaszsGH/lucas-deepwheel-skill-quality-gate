@@ -13,6 +13,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAME = "lucas-deepwheel-skill-quality-gate"
 SKILL = ROOT / "skills" / SKILL_NAME
 SCANNER = SKILL / "scripts" / "skill_quality_gate.py"
+BEHAVIOR_CASE_IDS = (
+    "consent_missing",
+    "data_subject_unconfirmed",
+    "minimum_input_missing",
+    "safety_preflight_incomplete",
+    "stop_condition",
+    "blocked_output_suppression",
+    "source_provenance_invalid",
+)
 
 
 def run_gate(*args: str, executable: bool = False) -> subprocess.CompletedProcess[str]:
@@ -157,6 +166,10 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "personalized_numeric_guidance_enabled": True,
                 "numeric_safety_contract_required": True,
                 "numeric_contract_path": "scripts/case_contract.py",
+                "behavioral_safety_contract_required": True,
+                "behavioral_safety_contract_path": "scripts/case_contract.py",
+                "behavioral_test_path": "tests/test_skill_quality_gate.py",
+                "behavioral_case_ids": list(BEHAVIOR_CASE_IDS),
             }
             (target / "agents" / "risk-profile.json").write_text(
                 json.dumps(profile), encoding="utf-8"
@@ -254,6 +267,10 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "personalized_numeric_guidance_enabled": True,
                 "numeric_safety_contract_required": True,
                 "numeric_contract_path": "scripts/case_contract.py",
+                "behavioral_safety_contract_required": True,
+                "behavioral_safety_contract_path": "scripts/case_contract.py",
+                "behavioral_test_path": "tests/test_skill_quality_gate.py",
+                "behavioral_case_ids": list(BEHAVIOR_CASE_IDS),
             }
             (target / "agents" / "risk-profile.json").write_text(
                 json.dumps(profile), encoding="utf-8"
@@ -264,6 +281,171 @@ class QualityGateBehaviorTests(unittest.TestCase):
             result = run_gate(str(target))
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertIn("numeric safety contract is not executable", result.stdout)
+
+    def test_high_risk_skill_without_behavior_contract_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a genetic nutrition Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "nutrition"],
+                "sensitive_data": ["health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+                "personalized_numeric_guidance_enabled": False,
+                "unreviewed_output_policy": "education_only",
+                "numeric_safety_contract_required": True,
+                "numeric_contract_path": "scripts/case_contract.py",
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            contract = target / "scripts" / "case_contract.py"
+            contract.write_text("print('synthetic contract')\n", encoding="utf-8")
+            contract.chmod(contract.stat().st_mode | 0o100)
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("high-risk behavioral safety contract is not required", result.stdout)
+
+    def test_high_risk_skill_with_incomplete_behavior_cases_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a genetic nutrition Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "nutrition"],
+                "sensitive_data": ["health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+                "personalized_numeric_guidance_enabled": False,
+                "unreviewed_output_policy": "education_only",
+                "numeric_safety_contract_required": True,
+                "numeric_contract_path": "scripts/case_contract.py",
+                "behavioral_safety_contract_required": True,
+                "behavioral_safety_contract_path": "scripts/case_contract.py",
+                "behavioral_test_path": "tests/test_behavior.py",
+                "behavioral_case_ids": ["consent_missing"],
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            contract = target / "scripts" / "case_contract.py"
+            contract.write_text("print('synthetic contract')\n", encoding="utf-8")
+            contract.chmod(contract.stat().st_mode | 0o100)
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("high-risk behavior regression coverage is incomplete", result.stdout)
+
+    def test_high_risk_publication_requires_behavior_test_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target = publication / "skills" / SKILL_NAME
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a genetic nutrition Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "nutrition"],
+                "sensitive_data": ["health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+                "personalized_numeric_guidance_enabled": False,
+                "unreviewed_output_policy": "education_only",
+                "numeric_safety_contract_required": True,
+                "numeric_contract_path": "scripts/case_contract.py",
+                "behavioral_safety_contract_required": True,
+                "behavioral_safety_contract_path": "scripts/case_contract.py",
+                "behavioral_test_path": "tests/missing_high_risk_behavior.py",
+                "behavioral_case_ids": list(BEHAVIOR_CASE_IDS),
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            contract = target / "scripts" / "case_contract.py"
+            contract.write_text("print('synthetic contract')\n", encoding="utf-8")
+            contract.chmod(contract.stat().st_mode | 0o100)
+            result = run_gate(str(target), "--publication-dir", str(publication))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("high-risk behavior regression test file is missing", result.stdout)
+
+    def test_high_risk_publication_test_must_contain_declared_cases(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target = publication / "skills" / SKILL_NAME
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a genetic nutrition Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "nutrition"],
+                "sensitive_data": ["health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+                "personalized_numeric_guidance_enabled": False,
+                "unreviewed_output_policy": "education_only",
+                "numeric_safety_contract_required": True,
+                "numeric_contract_path": "scripts/case_contract.py",
+                "behavioral_safety_contract_required": True,
+                "behavioral_safety_contract_path": "scripts/case_contract.py",
+                "behavioral_test_path": "tests/high_risk_behavior.py",
+                "behavioral_case_ids": list(BEHAVIOR_CASE_IDS),
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            contract = target / "scripts" / "case_contract.py"
+            contract.write_text("print('synthetic contract')\n", encoding="utf-8")
+            contract.chmod(contract.stat().st_mode | 0o100)
+            (publication / "tests" / "high_risk_behavior.py").write_text(
+                "# consent_missing only\n", encoding="utf-8"
+            )
+            result = run_gate(str(target), "--publication-dir", str(publication))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("high-risk behavior regression tests lack declared cases", result.stdout)
 
     def test_high_risk_signal_in_reference_is_detected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -350,6 +532,10 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "personalized_numeric_guidance_enabled": True,
                 "numeric_safety_contract_required": True,
                 "numeric_contract_path": "scripts/case_contract.py",
+                "behavioral_safety_contract_required": True,
+                "behavioral_safety_contract_path": "scripts/case_contract.py",
+                "behavioral_test_path": "tests/test_skill_quality_gate.py",
+                "behavioral_case_ids": list(BEHAVIOR_CASE_IDS),
             }
             (target / "agents" / "risk-profile.json").write_text(
                 json.dumps(profile), encoding="utf-8"
