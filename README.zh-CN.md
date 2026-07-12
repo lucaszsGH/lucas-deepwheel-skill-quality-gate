@@ -102,3 +102,9 @@ python3 -m unittest discover -s tests -p 'test_skill_quality_gate.py' -v
 ## License
 
 MIT License，见 [LICENSE](LICENSE)。
+
+## 高风险领域门禁
+
+当 Skill 入口涉及健康、医疗、基因、营养、法律、财务等高风险领域时，必须提供 agents/risk-profile.json。风险档案必须声明领域、敏感数据，以及同意、人工复核、来源追溯和拒绝规则；缺失或低报风险将直接 BLOCK。
+
+机器门禁能验证风险档案字段和入口中的控制条款是否存在，但不能证明专业规则本身正确；高风险 Skill 仍必须经过领域专家和人工行为测试。

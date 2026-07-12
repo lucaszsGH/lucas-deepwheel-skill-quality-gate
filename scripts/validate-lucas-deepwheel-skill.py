@@ -16,6 +16,7 @@ import sys
 
 REQUIRED_PUBLICATION_FILES = (
     ".gitattributes",
+    "assets/intro/README.md",
     ".gitignore",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/workflows/validate.yml",
@@ -28,6 +29,7 @@ REQUIRED_PUBLICATION_FILES = (
     "VERSION",
     "docs/INSTALLATION.md",
     "docs/PUBLICATION-CHECKLIST.md",
+    "docs/ROADMAP.md",
     "docs/TEST-RUNS.md",
     "docs/VERSIONING.md",
     "examples/example-prompts.md",
@@ -123,7 +125,7 @@ def tree_snapshot(root: Path) -> dict[str, bytes]:
         return snapshot
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
-        if ".git" in relative.parts or path.name == ".DS_Store":
+        if ".git" in relative.parts or "__pycache__" in relative.parts or path.name == ".DS_Store":
             continue
         if path.is_file() and not path.is_symlink():
             snapshot[str(relative)] = path.read_bytes()
@@ -133,7 +135,7 @@ def tree_snapshot(root: Path) -> dict[str, bytes]:
 def scan_tree(root: Path, errors: list[str]) -> None:
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
-        if ".git" in relative.parts or path.name == ".DS_Store":
+        if ".git" in relative.parts or "__pycache__" in relative.parts or path.name == ".DS_Store":
             continue
         label = str(relative)
         if path.is_symlink():

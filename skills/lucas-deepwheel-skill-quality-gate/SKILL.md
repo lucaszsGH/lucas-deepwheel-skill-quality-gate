@@ -84,6 +84,7 @@ GitHub 发布准备检查
 10. 读取 `references/reviewer-role-matrix.md`，完成 7 角色红蓝对抗。
 11. 如需要机器辅助，运行 `scripts/skill_quality_gate.py`。
 12. 输出 P0 / P1 / P2 修复建议；未获确认不修改目标 Skill。
+13. 发布包存在未勾选发布清单时，必须返回 CONCERNS；不得用结构检查或自动化测试替代尚未完成的人工签核。
 
 ## 机器门禁
 
@@ -146,3 +147,5 @@ python3 scripts/skill_quality_gate.py /path/to/target-skill --publication-dir /p
 - 是否没有把机器 CLEAN 当作生产能力证明；
 - 是否没有擅自修改、安装或发布目标 Skill；
 - 是否没有泄露敏感值、绝对路径或完整敏感日志。
+
+高风险领域规则见 `references/high-risk-domain-policy.md`。

@@ -10,6 +10,7 @@ import sys
 
 REQUIRED_REFERENCES = (
     "github-publishability-checklist.md",
+    "high-risk-domain-policy.md",
     "interaction-and-onboarding-policy.md",
     "new-user-capability-preflight.md",
     "quality-gate-framework.md",
@@ -39,6 +40,11 @@ REQUIRED_SCANNER_TERMS = (
     "PII_PATTERNS",
     "SENSITIVE_PATTERNS",
     "check_publication",
+    "check_risk_profile",
+    "has_numeric_safety_signal",
+    "numeric_safety_contract_required",
+    "INTRO_ASSET_SUFFIXES",
+    "publication checklist has incomplete items",
     "deduplicate",
     "raise SystemExit(main())",
     'return 2',
