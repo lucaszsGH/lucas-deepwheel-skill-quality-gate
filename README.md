@@ -1,6 +1,8 @@
 # Lucas-DeepWheel Skill Quality Gate
 
-Status: private-repository release candidate; not publicly published.
+**English** | [简体中文](README.zh-CN.md)
+
+Status: public release candidate; current version 0.1.0-rc.1.
 
 ![DeepWheel Skill Quality Gate: gate with evidence and release with confidence](assets/intro/quality-gate-hero-en.png)
 

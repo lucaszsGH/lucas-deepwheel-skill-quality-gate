@@ -1,6 +1,8 @@
 # Lucas-DeepWheel Skill Quality Gate｜Skills 质量门禁
 
-状态：私有仓库候选版，尚未公开发布。
+[English](README.md) | **简体中文**
+
+状态：公开发布候选版；当前版本 0.1.0-rc.1。
 
 ![DeepWheel Skill 质量门禁：以证据把关，发布才可信](assets/intro/quality-gate-hero-zh-CN.png)
 
