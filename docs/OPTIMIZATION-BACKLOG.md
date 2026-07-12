@@ -14,6 +14,15 @@
 - F2/F3/F4 三项新行为(见已修)当前靠手动验 + 24 原测试兜底,未加专门单测。
 - **改法建议**：给 tests/ 补：①命名前缀设/未设两态 ②domain skill 工具类检查降 NOTE ③CORE_GROUPS 同义词识别。命名测试需给 `run_gate` 加 `env=` 参数支持。
 
+### O7 · description/README 未提命名检查（P2，公开面同步欠账）
+- 命名规则检查是新增的用户可见维度,但 SKILL.md frontmatter 的 `description` 与 README 尚未列它。当前 `PUBLIC-SURFACE-REVIEW.json` 按 `internal_only/NO_CHANGE_REQUIRED` 止血(双语介绍图确不需改),文字同步推迟。
+- **改法建议**：并入下一轮 token/onboarding 公开面刷新,届时按 `user_visible/UPDATED` 正式复核,补 description/README 文字并更新双语图指纹。
+- **发现**：2026-07-13 合并 Codex 公开面闸后止血。
+
+### O8 · CHANGELOG 版本归属待理（P2，发版纪律）
+- 命名/skill_type/同义章节三条今晚暂记在 `rc.6` 段下,但 rc.6 实为 Codex 的 installer 修复。下一轮正式发版时应把这三条归入独立的 rc.7/Unreleased 段。
+- **发现**：2026-07-13 rebase 解冲突时并入。
+
 ## 已修
 
 ### F1 · description 只认双引号单行 → 折叠/字面/单引号/无引号误判 BLOCK（已修 b210906，2026-07-12）

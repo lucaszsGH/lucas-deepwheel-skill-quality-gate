@@ -3,8 +3,8 @@
   "skill_name": "lucas-deepwheel-skill-quality-gate",
   "capability_change": "internal_only",
   "decision": "NO_CHANGE_REQUIRED",
-  "reason": "rc.6 only corrects installed-state fingerprinting for installer-owned metadata; public capability, workflow, and bilingual visual meaning remain unchanged.",
-  "reviewed_skill_sha256": "2ee25dbcb261e786d0ef088e1e6a1e0c12d6b8b40bedee1b109e6f982abcadee",
+  "reason": "This gate update adds three internal gate checks — naming-convention prefix, skill_type awareness, and semantic section matching — plus their CHANGELOG entries. The gate workflow narrative and bilingual Hero/Workflow visuals are unchanged, so no image update is required. The README/description mention of the new naming check is deferred to the upcoming token-cost and onboarding public-surface refresh.",
+  "reviewed_skill_sha256": "890851df885bba508bcb19d151f39142c93b3974ba73ef065620ba7b2c111b60",
   "public_files": [
     "README.md",
     "README.zh-CN.md",
@@ -20,6 +20,6 @@
     "assets/intro/quality-gate-workflow-zh-CN.svg",
     "assets/intro/quality-gate-workflow-zh-CN.png"
   ],
-  "public_surface_sha256": "77ab8b8f5907ddd01be5fbaaf72b9b1723b6bab7236e54c23b2f9ef48ae10bd2",
+  "public_surface_sha256": "79e4a28a8c238a2637088bfbcc54c3a03430d9595842e28922d7aa1444cd091d",
   "updated_assets": []
 }
