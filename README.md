@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Status: public release candidate; current version 0.1.0-rc.4.
+Status: public release candidate; current version 0.1.0-rc.5.
 
 ![DeepWheel Skill Quality Gate: gate with evidence and release with confidence](assets/intro/quality-gate-hero-en.png)
 
@@ -21,6 +21,8 @@ It checks:
 - token and interaction policies;
 - common credential shapes, local paths, PII, and raw residue;
 - GitHub publication readiness;
+- read-only reconciliation across local source, GitHub main/PR, Actions, VERSION/Tag/Release, and the installed Skill;
+- whether README, bilingual editable/rendered introduction assets, examples, and installation guidance still match the current capability;
 - whether machine findings can correctly block CI.
 
 It does not execute the target Skill's business actions and does not replace real behavior tests or human review.
@@ -39,6 +41,12 @@ Audit both the Skill and its publication package:
 
 ```bash
 python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py /path/to/target-skill --publication-dir /path/to/publication-package
+```
+
+Reconcile the repository, live GitHub state, Actions, release metadata, and installed snapshot without changing them:
+
+```bash
+python3 skills/lucas-deepwheel-skill-quality-gate/scripts/reconcile_release_state.py /path/to/repository --json
 ```
 
 For a high-risk professional sign-off, print the deterministic packaged-Skill fingerprint and record it beside `Status: APPROVED`:
@@ -60,6 +68,9 @@ The report names the risk category and relative file only. It does not echo matc
 ### Supported
 
 - Static Skill and publication-package audit.
+- Read-only post-change GitHub and installed-copy reconciliation.
+- Capability-fingerprint binding for README, bilingual SVG/PNG introductions, examples, installation guidance, and Changelog.
+- `VISUAL ASSET STALE` when public explanations were not reviewed after the Skill changed.
 - Safe JSON or human-readable output.
 - CI-blocking exit semantics.
 - Seven-role review guidance and P0/P1/P2 repair planning.
@@ -75,7 +86,7 @@ The report names the risk category and relative file only. It does not echo matc
 
 - Complete secret or PII detection.
 - Proof that all business capabilities work.
-- Automatic repair, installation, publishing, push, Tag, or Release.
+- Automatic repair, README/image generation, installation, publishing, push, Tag, or Release.
 - Replacement for a security review.
 
 ## Installation

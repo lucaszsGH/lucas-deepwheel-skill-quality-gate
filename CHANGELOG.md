@@ -1,10 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.0-rc.5] - 2026-07-12
 
-- Fix `parse_frontmatter` to accept all standard YAML description scalar forms — double-quoted, single-quoted, folded (`>`), literal (`|`) and unquoted — instead of only double-quoted single-line. Folded descriptions (common in skill-creator examples and many published Skills) no longer trigger a false "description length is invalid" BLOCK.
-- Top-level frontmatter key detection now ignores indented block-scalar continuation lines, so folded/literal descriptions are not mis-counted as extra keys.
-- All 24 existing tests still pass; Quality Gate self-audit stays CLEAN.
+- Accept double-quoted, single-quoted, folded, literal and unquoted YAML description scalars without false frontmatter failures.
+- Ignore indented block-scalar continuation lines when validating top-level frontmatter keys.
+- Add read-only reconciliation across the unique source, local branch, GitHub main/PR, Actions, VERSION/Tag/Release and installed Skill.
+- Report MATCH, DRIFT, NOT PUSHED, PR OPEN, ACTIONS PENDING/FAILED and INSTALL OUTDATED without mutating Git or GitHub state.
+- Bind the exact packaged-Skill fingerprint to reviewed README, bilingual editable/rendered introduction assets, examples, installation guidance and Changelog.
+- Return `VISUAL ASSET STALE` when public-surface review evidence is missing, malformed or stale.
+- Keep repair responsibility outside the gate: AI may update public assets only after Lucas confirms, then the gate revalidates the new exact state.
+- Refresh the bilingual Hero and Workflow SVG/PNG introduction assets to explain synchronization and public-surface freshness.
+- Treat existing publication packages without a public-surface review manifest as `VISUAL ASSET STALE` until they complete a one-time evidence backfill.
 
 ## [0.1.0-rc.4] - 2026-07-12
 

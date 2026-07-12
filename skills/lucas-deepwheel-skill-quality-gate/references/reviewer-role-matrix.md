@@ -4,9 +4,9 @@
 
 1. 开发者：结构、维护、测试、扩展。
 2. 新用户：30 秒理解、首次成功、少配置。
-3. GitHub 资深老用户：README、安装、示例、Issue/PR 专业度。
-4. GitHub 审计员：安全、隐私、依赖、敏感信息、供应链风险。
-5. GitHub 高星 Skills 评测者：价值、传播、复用、贡献友好度。
+3. GitHub 资深老用户：README、安装、示例、Issue/PR 专业度，以及本地分支、GitHub main、PR 和 Actions 是否同步。
+4. GitHub 审计员：安全、隐私、依赖、敏感信息、供应链风险，以及 VERSION、Tag、Release 和安装版是否漂移。
+5. GitHub 高星 Skills 评测者：价值、传播、复用、贡献友好度，以及中英文文案和 Hero/Workflow 图片是否仍准确表达当前能力。
 6. Token 消耗高敏感者：是否避免无谓高消耗。
 7. iOS 使用体验评估官：清晰、渐进、反馈、恢复、手机端可读。
 

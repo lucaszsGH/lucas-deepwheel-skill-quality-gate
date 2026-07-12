@@ -40,6 +40,8 @@ Forbidden: old brand colors, purple glow, gradient spheres, glassmorphism, fake 
 
 The hero is a value proposition plus one editorial record. It must not repeat the numbered workflow. The right-side record uses one blue structural spine; all metadata fields remain neutral.
 
+The current hero must communicate three distinct responsibilities: Skill quality, post-change state reconciliation, and public-surface freshness. It must not imply that the gate performs repairs, image generation, or GitHub writes.
+
 English product label: `Skill Quality Gate`
 Chinese product label: `Skill 质量门禁`
 
@@ -48,6 +50,8 @@ Chinese product label: `Skill 质量门禁`
 ## Workflow role
 
 The workflow owns process explanation. It uses three unequal stages: input/target, the Skill engine, and the resulting package/report. The engine header is the only content-level blue plane; arrows, numbering, labels, and state text remain neutral.
+
+The rc.5 workflow explicitly shows: validate Skill and safety; reconcile GitHub, Actions and installation; check README/SVG/PNG freshness; issue a verdict and AI-ready repair requirements. Its footer distinguishes MATCH, DRIFT, NOT PUSHED, PR OPEN and VISUAL ASSET STALE.
 
 ## README placement
 

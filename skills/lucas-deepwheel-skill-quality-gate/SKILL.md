@@ -1,6 +1,6 @@
 ---
 name: lucas-deepwheel-skill-quality-gate
-description: "Use when evaluating, testing, red-teaming, preparing, or publishing an Agent Skill. Checks structure, safety, capability claims, independent product entry, companion-Skill routing, new-user readiness, optional tool setup, token cost, interaction quality, GitHub publishability, and reuse potential. Use for Skills 质量门禁, GitHub 发布前检查, 独立产品入口检查, 关联 Skill 主动提醒, 新用户能力体检, Token 成本评估, 交互体验评估, 红蓝对抗, 安全审计. Do not use to execute the target Skill's risky actions or replace real behavior tests."
+description: "Use when evaluating, testing, red-teaming, preparing, updating, or publishing an Agent Skill. Checks structure, safety, capability claims, independent product entry, companion-Skill routing, new-user readiness, token cost, GitHub publishability, local/GitHub/Actions/install consistency, public-description and bilingual-visual freshness, and reuse potential. Use for Skills 质量门禁, GitHub 发布前检查, 修改后同步对账, 公开介绍一致性, 图片介绍过期检查, 独立产品入口检查, 新用户能力体检, 红蓝对抗, 安全审计. Do not use to execute risky target actions, auto-repair public assets, or replace real behavior tests."
 ---
 
 # Lucas-DeepWheel Skill Quality Gate｜Skills 质量门禁
@@ -21,6 +21,8 @@ Token / 额度消耗检查
 交互与失败恢复检查
 安全隐私检查
 GitHub 发布准备检查
+本地 / GitHub / Actions / 安装版状态对账
+公开文案与中英文图片介绍一致性检查
 多角色红蓝对抗
 修复包建议
 ```
@@ -29,6 +31,8 @@ GitHub 发布准备检查
 
 - 准备创建、升级或安装一个 Skill；
 - 准备进入 GitHub 私有联调或公开发布前；
+- Skill 修改后需要确认源码、GitHub、Actions、版本、发布和安装版是否同步时；
+- 用户可见能力、流程、边界或定位变化后，需要确认 README 与双语图片介绍是否过期时；
 - Skill 功能变重、边界不清、用户看不懂时；
 - 需要检查独立入口、关联 Skill 路由或新用户能力体检时；
 - 需要做红蓝对抗、安全审计或多角色评审时；
@@ -41,6 +45,7 @@ GitHub 发布准备检查
 - 不用于直接执行目标 Skill 的业务动作；
 - 不替代真实任务 smoke test、截图 QA、导出 QA 或目标客户端复核；
 - 不自动安装、删除、覆盖、发送、公开发布、commit、push、Tag 或 Release；
+- 不自动生成或修改 README、SVG、PNG、示例和截图；发现不一致时只输出修复要求，等待 Lucas 确认后由 AI 执行；
 - 不读取、保存或输出敏感凭证、匹配到的敏感原文和完整敏感日志；
 - 不把“一次机器扫描通过”当作已经具备生产质量。
 
@@ -51,6 +56,8 @@ GitHub 发布准备检查
 - 检查 Skill 入口、frontmatter、references、agent metadata 和核心章节；
 - 检查能力声明、新用户能力体检、Token 策略、独立入口、关联 Skill 路由与交互恢复；
 - 检查发布包常用文件、安装入口、CI 和示例；
+- 只读对账唯一源码仓、本地分支、GitHub main、PR、Actions、VERSION、Tag、Release 和本机安装版；
+- 绑定 Skill 能力指纹与公开文案、双语 SVG/PNG、示例和安装说明；过期时输出 `VISUAL ASSET STALE` 并阻止 CLEAN；
 - 检测凭证形状、本机绝对路径、常见个人信息和原始调试残留；
 - 输出 CLEAN / CONCERNS / BLOCK，并用退出码支持 CI。
 
@@ -58,7 +65,7 @@ GitHub 发布准备检查
 
 - 真实业务行为测试；
 - HTML、PPT、PDF、OCR、视频、音频和 image2 能力实测；
-- GitHub Actions、安装、升级、回滚和跨平台验证；
+- GitHub 写入、安装、升级、回滚和跨平台验证；
 - 版权、客户隐私、供应链和对外发布判断；
 - 固定 7 角色红蓝对抗的人工结论。
 
@@ -87,6 +94,9 @@ GitHub 发布准备检查
 13. 发布包存在未勾选发布清单时，必须返回 CONCERNS；不得用结构检查或自动化测试替代尚未完成的人工签核。
 14. 高风险公开包如启用个体化数值建议，专业签核缺失、待定或指纹失效时直接 BLOCK；明确关闭个体化数值的教育参考候选版保持 CONCERNS。
 15. 所有高风险 Skill 必须声明可执行的行为安全合同和发布包测试路径，并覆盖同意、数据主体、最小输入、安全预检、停止态、阻断输出和来源追溯七类回归标识；门禁只静态核验，不执行不受信任的目标代码。
+16. 如目标是 Git 仓库，读取 `references/release-state-reconciliation.md`，运行 `scripts/reconcile_release_state.py`，区分 MATCH / DRIFT / NOT PUSHED / PR OPEN / ACTIONS FAILED / INSTALL OUTDATED。
+17. 读取 `references/public-surface-consistency.md`；用户可见能力变化必须同步复核中英文 README、Hero/Workflow SVG 与 PNG、示例、安装说明和 Changelog。未更新或未记录无需更新原因时返回 `VISUAL ASSET STALE`。
+18. Quality Gate 只负责发现、要求修复和复核。Lucas 确认后，由 AI 或关联设计/文档能力执行修改，再重新运行门禁；门禁不得自己修改、自己通过。
 
 ## 机器门禁
 
@@ -102,6 +112,12 @@ python3 scripts/skill_quality_gate.py /path/to/target-skill
 
 ```bash
 python3 scripts/skill_quality_gate.py /path/to/target-skill --publication-dir /path/to/publication-package
+```
+
+只读核验源码、GitHub、Actions、版本与安装版：
+
+```bash
+python3 scripts/reconcile_release_state.py /path/to/repository --json
 ```
 
 退出码：
@@ -142,6 +158,9 @@ python3 scripts/skill_quality_gate.py /path/to/target-skill --publication-dir /p
 
 - 是否现场读取目标文件；
 - 是否区分 Skill 本体、发布包和真实行为测试；
+- 是否核验本地源码、GitHub main/PR、Actions、VERSION/Tag/Release 和安装版状态；
+- 用户可见能力变化后，公开文案与中英文可编辑/渲染图片是否已经复核；
+- 如公开介绍未同步，是否输出 `VISUAL ASSET STALE` 并阻止 CLEAN；
 - 是否区分已核实、推断和待确认；
 - 是否给出明确严重程度和可靠退出码；
 - 是否包含新用户能力体检、独立入口、关联 Skill、Token 和交互恢复视角；

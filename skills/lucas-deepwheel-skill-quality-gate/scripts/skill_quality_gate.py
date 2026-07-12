@@ -175,6 +175,13 @@ REQUIRED_HIGH_RISK_BEHAVIOR_CASES = (
     "blocked_output_suppression",
     "source_provenance_invalid",
 )
+PUBLIC_SURFACE_CORE_FILES = {
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "docs/INSTALLATION.md",
+    "examples/example-prompts.md",
+}
 
 
 def finding(severity: str, title: str, detail: str) -> dict[str, str]:
@@ -222,6 +229,103 @@ def tree_sha256(root: Path) -> str:
             digest.update(path.read_bytes())
             digest.update(b"\0")
     return digest.hexdigest()
+
+
+def listed_files_sha256(root: Path, relatives: list[str]) -> str | None:
+    digest = sha256()
+    for value in sorted(relatives):
+        relative = safe_declared_path(value)
+        if relative is None:
+            return None
+        path = root / relative
+        if not path.is_file() or path.is_symlink():
+            return None
+        digest.update(str(relative).encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def check_public_surface_review(
+    publication: Path,
+    skill: Path,
+    skill_name: str | None,
+) -> list[dict[str, str]]:
+    path = publication / "docs" / "PUBLIC-SURFACE-REVIEW.json"
+    if not path.is_file() or path.is_symlink():
+        return [
+            finding(
+                "warning",
+                "VISUAL ASSET STALE",
+                "docs/PUBLIC-SURFACE-REVIEW.json is missing",
+            )
+        ]
+    try:
+        manifest = json.loads(read_text(path))
+    except (json.JSONDecodeError, OSError):
+        return [
+            finding(
+                "warning",
+                "VISUAL ASSET STALE",
+                "public-surface review manifest is invalid",
+            )
+        ]
+
+    problems: list[str] = []
+    if manifest.get("schema_version") != 1:
+        problems.append("schema_version")
+    if skill_name and manifest.get("skill_name") != skill_name:
+        problems.append("skill_name")
+    capability_change = manifest.get("capability_change")
+    decision = manifest.get("decision")
+    if capability_change not in {"user_visible", "internal_only"}:
+        problems.append("capability_change")
+    if decision not in {"UPDATED", "NO_CHANGE_REQUIRED"}:
+        problems.append("decision")
+    if capability_change == "user_visible" and decision != "UPDATED":
+        problems.append("user_visible change must update public surfaces")
+    if not isinstance(manifest.get("reason"), str) or len(manifest.get("reason", "").strip()) < 20:
+        problems.append("reason")
+    if manifest.get("reviewed_skill_sha256") != tree_sha256(skill):
+        problems.append("capability fingerprint changed")
+
+    public_files = manifest.get("public_files")
+    if not isinstance(public_files, list) or any(not isinstance(item, str) for item in public_files):
+        problems.append("public_files")
+        public_files = []
+    else:
+        inventory = set(public_files)
+        if not PUBLIC_SURFACE_CORE_FILES.issubset(inventory):
+            problems.append("public surface inventory incomplete")
+        for suffix in INTRO_ASSET_SUFFIXES:
+            if not any(item.startswith("assets/intro/") and item.endswith(suffix) for item in public_files):
+                problems.append("bilingual introduction inventory incomplete")
+                break
+    public_digest = listed_files_sha256(publication, public_files)
+    if public_digest is None or manifest.get("public_surface_sha256") != public_digest:
+        problems.append("public surface fingerprint changed")
+
+    if decision == "UPDATED":
+        updated = manifest.get("updated_assets")
+        if not isinstance(updated, list) or any(not isinstance(item, str) for item in updated):
+            problems.append("updated_assets")
+        else:
+            suffixes = ("-en.svg", "-en.png", "-zh-CN.svg", "-zh-CN.png")
+            for suffix in suffixes:
+                if not any(item.startswith("assets/intro/") and item.endswith(suffix) for item in updated):
+                    problems.append("bilingual editable/rendered asset update incomplete")
+                    break
+
+    if not problems:
+        return []
+    return [
+        finding(
+            "warning",
+            "VISUAL ASSET STALE",
+            "; ".join(dict.fromkeys(problems)),
+        )
+    ]
 
 
 def scan_tree(root: Path) -> tuple[list[dict[str, str]], str]:
@@ -649,6 +753,7 @@ def check_publication(
 
     scan_findings, publication_text = scan_tree(publication)
     findings.extend(scan_findings)
+    findings.extend(check_public_surface_review(publication, skill, skill_name))
 
     for relative in REQUIRED_PUBLICATION_FILES:
         if not (publication / relative).is_file():

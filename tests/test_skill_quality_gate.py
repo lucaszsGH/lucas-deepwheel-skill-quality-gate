@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+from hashlib import sha256
+import importlib.util
 import json
 from pathlib import Path
 import shutil
@@ -13,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAME = "lucas-deepwheel-skill-quality-gate"
 SKILL = ROOT / "skills" / SKILL_NAME
 SCANNER = SKILL / "scripts" / "skill_quality_gate.py"
+RECONCILER = SKILL / "scripts" / "reconcile_release_state.py"
 BEHAVIOR_CASE_IDS = (
     "consent_missing",
     "data_subject_unconfirmed",
@@ -22,6 +25,11 @@ BEHAVIOR_CASE_IDS = (
     "blocked_output_suppression",
     "source_provenance_invalid",
 )
+
+scanner_spec = importlib.util.spec_from_file_location("quality_gate_scanner", SCANNER)
+quality_gate_scanner = importlib.util.module_from_spec(scanner_spec)
+assert scanner_spec.loader is not None
+scanner_spec.loader.exec_module(quality_gate_scanner)
 
 
 def run_gate(*args: str, executable: bool = False) -> subprocess.CompletedProcess[str]:
@@ -36,7 +44,141 @@ def run_gate(*args: str, executable: bool = False) -> subprocess.CompletedProces
     )
 
 
+def refresh_public_surface_manifest(publication: Path, target_skill: Path) -> None:
+    path = publication / "docs" / "PUBLIC-SURFACE-REVIEW.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["skill_name"] = target_skill.name
+    data["capability_change"] = "internal_only"
+    data["decision"] = "NO_CHANGE_REQUIRED"
+    data["reason"] = "Synthetic fixture changes only; public positioning and workflow remain unchanged."
+    data["reviewed_skill_sha256"] = quality_gate_scanner.tree_sha256(target_skill)
+    data["updated_assets"] = []
+    data["public_surface_sha256"] = quality_gate_scanner.listed_files_sha256(
+        publication, data["public_files"]
+    )
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def git_run(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args], cwd=repo, text=True, capture_output=True, check=True
+    )
+
+
+def make_release_state_fixture(temp: Path) -> tuple[Path, Path, Path]:
+    repo = temp / "repo"
+    origin = temp / "origin.git"
+    installed = temp / "installed" / "synthetic-skill"
+    skill = repo / "skills" / "synthetic-skill"
+    skill.mkdir(parents=True)
+    (skill / "SKILL.md").write_text(
+        '---\nname: synthetic-skill\ndescription: "Use when testing. Do not publish."\n---\n\n# Synthetic\n',
+        encoding="utf-8",
+    )
+    (repo / "VERSION").write_text("0.1.0-rc.1\n", encoding="utf-8")
+    git_run(repo, "init", "-b", "main")
+    git_run(repo, "config", "user.name", "Synthetic Test")
+    git_run(repo, "config", "user.email", "synthetic" + "@" + "example.invalid")
+    git_run(repo, "add", ".")
+    git_run(repo, "commit", "-m", "Initial synthetic state")
+    subprocess.run(["git", "init", "--bare", str(origin)], text=True, capture_output=True, check=True)
+    git_run(repo, "remote", "add", "origin", str(origin))
+    git_run(repo, "push", "-u", "origin", "main")
+    shutil.copytree(skill, installed)
+    return repo, skill, installed
+
+
 class QualityGateBehaviorTests(unittest.TestCase):
+    def test_release_state_reconciler_reports_offline_match(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo, skill, installed = make_release_state_fixture(Path(temp))
+            result = subprocess.run(
+                [
+                    "python3", str(RECONCILER), str(repo),
+                    "--skill-dir", str(skill),
+                    "--installed-skill-dir", str(installed),
+                    "--offline", "--json",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["summary"]["verdict"], "CLEAN")
+        statuses = {item["area"]: item["code"] for item in payload["statuses"]}
+        self.assertEqual(statuses["local_worktree"], "MATCH")
+        self.assertEqual(statuses["github_branch"], "MATCH")
+        self.assertEqual(statuses["installation"], "MATCH")
+
+    def test_release_state_reconciler_detects_not_pushed_and_install_outdated(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo, skill, installed = make_release_state_fixture(Path(temp))
+            git_run(repo, "switch", "-c", "agent/synthetic-change")
+            (skill / "SKILL.md").write_text(
+                (skill / "SKILL.md").read_text(encoding="utf-8") + "\nChanged capability.\n",
+                encoding="utf-8",
+            )
+            git_run(repo, "add", ".")
+            git_run(repo, "commit", "-m", "Change synthetic capability")
+            result = subprocess.run(
+                [
+                    "python3", str(RECONCILER), str(repo),
+                    "--skill-dir", str(skill),
+                    "--installed-skill-dir", str(installed),
+                    "--offline", "--json",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        codes = {item["code"] for item in payload["statuses"]}
+        self.assertIn("NOT PUSHED", codes)
+        self.assertIn("INSTALL OUTDATED", codes)
+
+    def test_release_state_reconciler_reports_pr_open_and_actions_failed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            repo, skill, installed = make_release_state_fixture(root)
+            main_sha = git_run(repo, "rev-parse", "HEAD").stdout.strip()
+            git_run(repo, "switch", "-c", "agent/synthetic-change")
+            (skill / "SKILL.md").write_text(
+                (skill / "SKILL.md").read_text(encoding="utf-8") + "\nChanged capability.\n",
+                encoding="utf-8",
+            )
+            git_run(repo, "add", ".")
+            git_run(repo, "commit", "-m", "Change synthetic capability")
+            head = git_run(repo, "rev-parse", "HEAD").stdout.strip()
+            snapshot = {
+                "default_branch": "main",
+                "default_sha": main_sha,
+                "branch_sha": head,
+                "visibility": "PUBLIC",
+                "pull_requests": [{"headRefOid": head, "number": 1}],
+                "actions": [{"headSha": head, "status": "completed", "conclusion": "failure"}],
+                "releases": [],
+            }
+            snapshot_path = root / "snapshot.json"
+            snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+            result = subprocess.run(
+                [
+                    "python3", str(RECONCILER), str(repo),
+                    "--skill-dir", str(skill),
+                    "--installed-skill-dir", str(installed),
+                    "--github-snapshot", str(snapshot_path), "--json",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        codes = {item["code"] for item in payload["statuses"]}
+        self.assertIn("PR OPEN", codes)
+        self.assertIn("ACTIONS FAILED", codes)
+
     def test_clean_skill_returns_zero(self) -> None:
         result = run_gate(str(SKILL))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -489,6 +631,64 @@ class QualityGateBehaviorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("bilingual GitHub introduction asset is missing", result.stdout)
 
+    def test_missing_public_surface_manifest_returns_visual_asset_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target_skill = publication / "skills" / SKILL_NAME
+            (publication / "docs" / "PUBLIC-SURFACE-REVIEW.json").unlink()
+            result = run_gate(
+                str(target_skill),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("VISUAL ASSET STALE", result.stdout)
+
+    def test_changed_skill_without_public_surface_review_returns_visual_asset_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target_skill = publication / "skills" / SKILL_NAME
+            skill_md = target_skill / "SKILL.md"
+            skill_md.write_text(
+                skill_md.read_text(encoding="utf-8") + "\nSynthetic capability change.\n",
+                encoding="utf-8",
+            )
+            result = run_gate(
+                str(target_skill),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("VISUAL ASSET STALE", result.stdout)
+        self.assertIn("capability fingerprint changed", result.stdout)
+
+    def test_user_visible_review_requires_bilingual_editable_and_rendered_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target_skill = publication / "skills" / SKILL_NAME
+            refresh_public_surface_manifest(publication, target_skill)
+            manifest_path = publication / "docs" / "PUBLIC-SURFACE-REVIEW.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["capability_change"] = "user_visible"
+            manifest["decision"] = "UPDATED"
+            manifest["reason"] = "Synthetic user-visible capability requires a bilingual visual update."
+            manifest["updated_assets"] = []
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            result = run_gate(
+                str(target_skill),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("VISUAL ASSET STALE", result.stdout)
+        self.assertIn("bilingual editable/rendered asset update incomplete", result.stdout)
+
     def test_incomplete_publication_checklist_returns_concerns(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             publication = Path(temp) / "publication"
@@ -543,6 +743,7 @@ class QualityGateBehaviorTests(unittest.TestCase):
             contract = target / "scripts" / "case_contract.py"
             contract.write_text("print('synthetic contract')\n", encoding="utf-8")
             contract.chmod(contract.stat().st_mode | 0o100)
+            refresh_public_surface_manifest(publication, target)
             signoff = publication / "docs" / "PROFESSIONAL-SIGNOFF.md"
             signoff.write_text("# Sign-off\n\nStatus: PENDING\n", encoding="utf-8")
             pending = run_gate(
@@ -577,6 +778,7 @@ class QualityGateBehaviorTests(unittest.TestCase):
             (target / "agents" / "risk-profile.json").write_text(
                 json.dumps(profile), encoding="utf-8"
             )
+            refresh_public_surface_manifest(publication, target)
             signoff.write_text("# Sign-off\n\nStatus: PENDING\n", encoding="utf-8")
             education_only_pending = run_gate(
                 str(target),

@@ -11,8 +11,8 @@ The SVG files are editable sources. PNG files are exact 1600 x 900 README export
 
 ## Visual roles
 
-- Hero: value proposition plus one editorial record; not a mini workflow.
-- Workflow: the only process explanation; the engine header is the single content-level blue focus.
+- Hero: value proposition plus one editorial record covering structure, synchronization and public-surface review; not a mini workflow.
+- Workflow: the only process explanation, now including GitHub/Actions/install reconciliation and bilingual README/SVG/PNG freshness; the engine header is the single content-level blue focus.
 - Internal panels use Hairline outlines only. Decorative shadow is limited to the outer facade card.
 
 The embedded mark and visual tokens come from the current DeepWheel brand system. Do not replace them with older colors or historical monograms.
