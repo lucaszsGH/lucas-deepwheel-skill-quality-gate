@@ -361,7 +361,23 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "--publication-dir",
                 str(publication),
             )
-            signoff.write_text("# Sign-off\n\nStatus: APPROVED\n", encoding="utf-8")
+            digest_result = run_gate(str(target), "--print-skill-sha256")
+            self.assertEqual(digest_result.returncode, 0, digest_result.stderr)
+            digest = digest_result.stdout.strip()
+            self.assertRegex(digest, r"^[0-9a-f]{64}$")
+            signoff.write_text(
+                "# Sign-off\n\nStatus: APPROVED\n\nTarget Skill SHA256: " + ("0" * 64) + "\n",
+                encoding="utf-8",
+            )
+            mismatched = run_gate(
+                str(target),
+                "--publication-dir",
+                str(publication),
+            )
+            signoff.write_text(
+                "# Sign-off\n\nStatus: APPROVED\n\nTarget Skill SHA256: " + digest + "\n",
+                encoding="utf-8",
+            )
             approved = run_gate(
                 str(target),
                 "--publication-dir",
@@ -369,6 +385,8 @@ class QualityGateBehaviorTests(unittest.TestCase):
             )
         self.assertEqual(pending.returncode, 1, pending.stdout + pending.stderr)
         self.assertIn("high-risk professional sign-off is incomplete", pending.stdout)
+        self.assertEqual(mismatched.returncode, 1, mismatched.stdout + mismatched.stderr)
+        self.assertIn("professional sign-off target does not match current Skill", mismatched.stdout)
         self.assertEqual(approved.returncode, 0, approved.stdout + approved.stderr)
         self.assertIn("Skill Quality Gate: CLEAN", approved.stdout)
 

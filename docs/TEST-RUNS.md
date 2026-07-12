@@ -52,3 +52,4 @@ Result: PASS.
 - Non-executable numeric safety contract: BLOCK
 - Incomplete publication checklist: CONCERNS
 - Missing or pending high-risk professional sign-off: CONCERNS; explicit APPROVED sign-off: CLEAN
+- Approved sign-off with a stale or mismatched Skill fingerprint: CONCERNS

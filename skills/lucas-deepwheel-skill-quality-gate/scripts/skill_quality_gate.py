@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from hashlib import sha256
 import json
 from pathlib import Path
 import re
@@ -192,6 +193,17 @@ def iter_paths(root: Path) -> Iterable[Path]:
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
+
+
+def tree_sha256(root: Path) -> str:
+    digest = sha256()
+    for path in iter_paths(root):
+        if path.is_file() and not path.is_symlink():
+            digest.update(safe_relative(path, root).encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def scan_tree(root: Path) -> tuple[list[dict[str, str]], str]:
@@ -559,14 +571,29 @@ def check_publication(
                     "docs/PROFESSIONAL-SIGNOFF.md",
                 )
             )
-        elif not re.search(r"(?im)^Status:\s*APPROVED\s*$", read_text(signoff)):
-            findings.append(
-                finding(
-                    "warning",
-                    "high-risk professional sign-off is incomplete",
-                    "docs/PROFESSIONAL-SIGNOFF.md must record Status: APPROVED",
+        else:
+            signoff_text = read_text(signoff)
+            if not re.search(r"(?im)^Status:\s*APPROVED\s*$", signoff_text):
+                findings.append(
+                    finding(
+                        "warning",
+                        "high-risk professional sign-off is incomplete",
+                        "docs/PROFESSIONAL-SIGNOFF.md must record Status: APPROVED",
+                    )
                 )
-            )
+            else:
+                target_match = re.search(
+                    r"(?im)^Target Skill SHA256:\s*([0-9a-f]{64})\s*$",
+                    signoff_text,
+                )
+                if target_match is None or target_match.group(1) != tree_sha256(skill):
+                    findings.append(
+                        finding(
+                            "warning",
+                            "professional sign-off target does not match current Skill",
+                            "record the current --print-skill-sha256 value",
+                        )
+                    )
 
     intro_dir = publication / "assets" / "intro"
     intro_names = (
@@ -716,9 +743,16 @@ def main() -> int:
     parser.add_argument("skill_dir")
     parser.add_argument("--publication-dir")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--print-skill-sha256", action="store_true")
     args = parser.parse_args()
 
     skill = Path(args.skill_dir).expanduser().resolve()
+    if args.print_skill_sha256:
+        if not skill.is_dir():
+            print("BLOCK: Skill directory is missing")
+            return 2
+        print(tree_sha256(skill))
+        return 0
     findings, skill_name = check_skill(skill)
     if args.publication_dir is not None:
         publication = Path(args.publication_dir).expanduser().resolve()

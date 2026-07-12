@@ -12,6 +12,7 @@
 - Prevent CLEAN when the publication checklist still contains incomplete items.
 - Require a recorded review document in the DeepWheel publication baseline.
 - Require explicit approved professional sign-off before a high-risk package can return CLEAN publication readiness.
+- Bind high-risk professional approval to a deterministic SHA-256 fingerprint of the reviewed Skill body.
 
 All notable user-visible changes are recorded here.
 
