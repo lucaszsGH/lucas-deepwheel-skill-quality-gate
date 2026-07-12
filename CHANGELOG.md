@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- Fix `parse_frontmatter` to accept all standard YAML description scalar forms — double-quoted, single-quoted, folded (`>`), literal (`|`) and unquoted — instead of only double-quoted single-line. Folded descriptions (common in skill-creator examples and many published Skills) no longer trigger a false "description length is invalid" BLOCK.
+- Top-level frontmatter key detection now ignores indented block-scalar continuation lines, so folded/literal descriptions are not mis-counted as extra keys.
+- All 24 existing tests still pass; Quality Gate self-audit stays CLEAN.
+
 ## [0.1.0-rc.4] - 2026-07-12
 
 - Require every high-risk Skill to declare an executable behavioral safety contract.

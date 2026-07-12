@@ -267,24 +267,49 @@ def scan_tree(root: Path) -> tuple[list[dict[str, str]], str]:
     return findings, "\n".join(text_parts)
 
 
+def _extract_scalar(frontmatter: str, key: str) -> str:
+    """取 YAML 标量值，兼容 双引号 / 单引号 / 折叠(>) / 字面(|) / 无引号 五种写法。"""
+    inline = re.search(rf"^{key}:[ \t]*(.*)$", frontmatter, re.M)
+    if not inline:
+        return ""
+    raw = inline.group(1).strip()
+    if raw in (">", "|", ">-", "|-", ">+", "|+"):
+        # 块标量：收集紧随其后的缩进续行
+        lines = frontmatter.splitlines()
+        start = next(
+            (i for i, ln in enumerate(lines) if re.match(rf"^{key}:", ln)), None
+        )
+        if start is None:
+            return ""
+        block: list[str] = []
+        for ln in lines[start + 1:]:
+            if ln.strip() == "":
+                block.append("")
+            elif ln[:1].isspace():
+                block.append(ln.strip())
+            else:
+                break
+        return " ".join(x for x in block if x).strip()  # 折叠：空格连接
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ('"', "'"):
+        return raw[1:-1].strip()
+    return raw
+
+
 def parse_frontmatter(text: str) -> tuple[str, str] | None:
     match = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     if not match:
         return None
     frontmatter = match.group(1)
+    # 只数顶层键(行首无缩进)，避免把折叠/字面块的缩进续行误当成键
     keys = [
         line.split(":", 1)[0].strip()
         for line in frontmatter.splitlines()
-        if ":" in line
+        if ":" in line and not line[:1].isspace()
     ]
     if keys != ["name", "description"]:
         return "", ""
-    name_match = re.search(r"^name:\s*([^\n]+)$", frontmatter, re.M)
-    description_match = re.search(
-        r'^description:\s*"(.*)"\s*$', frontmatter, re.M
-    )
-    name = name_match.group(1).strip() if name_match else ""
-    description = description_match.group(1).strip() if description_match else ""
+    name = _extract_scalar(frontmatter, "name")
+    description = _extract_scalar(frontmatter, "description")
     return name, description
 
 
