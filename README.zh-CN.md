@@ -41,6 +41,12 @@ python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py 
 python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py /path/to/target-skill --publication-dir /path/to/publication-package
 ```
 
+高风险专业签核前，先生成确定性的 Skill 指纹，并与 `Status: APPROVED` 一起记录：
+
+```bash
+python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py /path/to/target-skill --print-skill-sha256
+```
+
 稳定退出码：
 
 - `0`：CLEAN；

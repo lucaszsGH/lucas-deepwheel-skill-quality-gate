@@ -41,6 +41,12 @@ Audit both the Skill and its publication package:
 python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py /path/to/target-skill --publication-dir /path/to/publication-package
 ```
 
+For a high-risk professional sign-off, print the deterministic packaged-Skill fingerprint and record it beside `Status: APPROVED`:
+
+```bash
+python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py /path/to/target-skill --print-skill-sha256
+```
+
 Exit codes are stable for automation:
 
 - `0`: CLEAN;

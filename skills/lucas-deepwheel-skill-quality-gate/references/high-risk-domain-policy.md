@@ -32,4 +32,4 @@ If a high-risk Skill promises dose, supplement amount, intake amount or upper-li
 
 ## Public-release sign-off
 
-A high-risk publication package must include `docs/PROFESSIONAL-SIGNOFF.md`. Only an explicit `Status: APPROVED` may satisfy this gate. Missing or pending sign-off returns CONCERNS; structural checks and machine tests cannot self-approve a high-risk public release.
+A high-risk publication package must include `docs/PROFESSIONAL-SIGNOFF.md`. Only an explicit `Status: APPROVED` plus a `Target Skill SHA256` matching the current packaged Skill may satisfy this gate. Compute the deterministic fingerprint with `--print-skill-sha256`. Missing, pending, malformed or stale sign-off returns CONCERNS; structural checks and machine tests cannot self-approve a high-risk public release.
