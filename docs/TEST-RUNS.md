@@ -1,5 +1,19 @@
 # Test Runs
 
+## 2026-07-12 · rc.5 GitHub synchronization and public-surface candidate
+
+- Version target: 0.1.0-rc.5; no Tag or Release created.
+- Read-only state reconciliation: covers local source/branch, GitHub main and PR, Actions, VERSION/Tag/Release and installed snapshot.
+- Stable state labels: covers MATCH, DRIFT, NOT PUSHED, PR OPEN, ACTIONS PENDING/FAILED, INSTALL OUTDATED and UNRELEASED.
+- Public-surface review: exact Skill fingerprint and reviewed public-file fingerprint are bound in `docs/PUBLIC-SURFACE-REVIEW.json`.
+- Visual freshness: missing or stale evidence returns `VISUAL ASSET STALE`; user-visible changes require updated English and Chinese SVG/PNG assets.
+- Behavior tests: 30 / 30 PASS, including deterministic GitHub-state fixtures and public-surface negative cases.
+- Bilingual visual assets: four SVG sources and four 1600 x 900 PNG renders refreshed and visually inspected.
+- Repair boundary: the gate reports and requires changes; AI performs approved edits and reruns validation.
+- Existing published Skills require a one-time public-surface manifest backfill; until then the expected result is CONCERNS, not CLEAN.
+- Current installed Quality Gate remains rc.4 and is intentionally not replaced during branch development.
+- No real health records, customer data, credentials or private logs were used.
+
 ## 2026-07-12 · rc.4 high-risk behavior regression candidate
 
 - Version target: 0.1.0-rc.4; no Tag or Release created.

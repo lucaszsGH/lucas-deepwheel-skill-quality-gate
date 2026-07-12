@@ -52,6 +52,14 @@ python3 scripts/verify-installed-copy.py
 
 `RESULT=MATCH` means the installed Skill body matches the repository source. `RESULT=DRIFT` means the copies differ; it is not permission to replace either copy.
 
+After installation, the read-only release-state reconciler is available inside the Skill:
+
+```bash
+python3 ~/.codex/skills/lucas-deepwheel-skill-quality-gate/scripts/reconcile_release_state.py /path/to/repository --json
+```
+
+Live GitHub and Actions reconciliation requires an existing authenticated GitHub CLI session. Missing GitHub CLI or authorization is reported as unavailable; the Skill does not initiate login or read credentials.
+
 ## What this installs
 
 This installs the Quality Gate Skill only. It does not install OCR, browser automation, document export, image generation, GitHub CLI, or other Skills.

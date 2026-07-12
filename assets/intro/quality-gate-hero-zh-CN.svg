@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
 <title id="title">DeepWheel Skill 质量门禁 GitHub 中文介绍</title>
-<desc id="desc">输出有证据的判定和修复计划，不自动发布。</desc>
+<desc id="desc">发现漂移与介绍过期，给出 AI 可执行的修复要求。</desc>
 
 <defs>
   <radialGradient id="aura" cx="100%" cy="0%" r="135%">
@@ -28,12 +28,12 @@
 <line x1="106" y1="158" x2="1494" y2="158" stroke="#E1E6EE" stroke-width="1"/>
 <text x="112" y="224" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="14" fill="#5C626B" letter-spacing="2.4">DEEPWHEEL · AGENT SKILL</text>
 <text x="112" y="288" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="32" fill="#101722" letter-spacing="-.5">Skill 质量门禁</text>
-<text x="112" y="390" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="68" fill="#101722" letter-spacing="-1.7"><tspan x="112" dy="0">以证据把关，</tspan><tspan x="112" dy="76">发布才可信。</tspan></text>
+<text x="112" y="390" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="68" fill="#101722" letter-spacing="-1.7"><tspan x="112" dy="0">以证据把关，</tspan><tspan x="112" dy="76">让每个公开面都同步。</tspan></text>
 <line x1="112" y1="530" x2="358" y2="530" stroke="#E1E6EE" stroke-width="1.5"/>
-<text x="112" y="578" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="27" fill="#42474F" letter-spacing="-.15"><tspan x="112" dy="0">在 Skill 发布前检查结构、行为、</tspan><tspan x="112" dy="42">安全与发布就绪度。</tspan></text>
+<text x="112" y="578" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="27" fill="#42474F" letter-spacing="-.15"><tspan x="112" dy="0">检查 Skill，也对账 GitHub、Actions、</tspan><tspan x="112" dy="42">安装版与中英文公开介绍。</tspan></text>
 <line x1="112" y1="688" x2="980" y2="688" stroke="#E1E6EE" stroke-width="1.5"/>
-<text x="112" y="730" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="14" fill="#5C626B" letter-spacing="0.6">结构   ·   声明   ·   安全   ·   行为   ·   发布</text>
-<text x="112" y="783" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#5C626B">输出有证据的判定和修复计划，不自动发布。</text>
+<text x="112" y="730" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="14" fill="#5C626B" letter-spacing="0.6">结构   ·   安全   ·   同步   ·   公开介绍</text>
+<text x="112" y="783" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#5C626B">发现漂移与介绍过期，给出 AI 可执行的修复要求。</text>
 <!-- Editorial material-package composition: one blue structural spine, no internal shadows. -->
 <path d="M1030 310 H1362 L1418 366 V726 H1030 Z" fill="#F2F5F9" stroke="#E1E6EE" stroke-width="1.5"/>
 <path d="M1362 310 V366 H1418" fill="none" stroke="#E1E6EE" stroke-width="1.5"/>
@@ -47,14 +47,14 @@
 <text x="1110" y="420" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.4">结构</text>
 <text x="1110" y="450" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="17" fill="#42474F">发布包与元数据</text>
 <line x1="1110" y1="472" x2="1392" y2="472" stroke="#E1E6EE" stroke-width="1"/>
-<text x="1110" y="510" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.4">安全</text>
-<text x="1110" y="540" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="17" fill="#42474F">凭证形态与残留扫描</text>
+<text x="1110" y="510" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.4">同步</text>
+<text x="1110" y="540" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="17" fill="#42474F">源码 · GitHub · 安装版</text>
 <line x1="1110" y1="562" x2="1392" y2="562" stroke="#E1E6EE" stroke-width="1"/>
-<text x="1110" y="600" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.4">证据</text>
-<text x="1110" y="630" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="17" fill="#42474F">测试与评审已记录</text>
+<text x="1110" y="600" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.4">公开面</text>
+<text x="1110" y="630" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="17" fill="#42474F">README · SVG · PNG 已复核</text>
 <text x="1110" y="674" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="13" fill="#101722" letter-spacing=".3">机器门禁：输出判定</text>
 <circle cx="1388" cy="670" r="5" fill="#101722"/>
 <text x="1216" y="756" text-anchor="middle" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.3">发布状态</text>
-<text x="1216" y="785" text-anchor="middle" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#42474F">通过 / 警告 / 阻断</text>
+<text x="1216" y="785" text-anchor="middle" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#42474F">一致 / 漂移 / 介绍过期</text>
 
 </svg>

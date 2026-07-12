@@ -20,6 +20,14 @@ JSON output:
 python3 skills/lucas-deepwheel-skill-quality-gate/scripts/skill_quality_gate.py /path/to/target-skill --json
 ```
 
+Read-only release-state reconciliation:
+
+```bash
+python3 skills/lucas-deepwheel-skill-quality-gate/scripts/reconcile_release_state.py /path/to/repository --json
+```
+
+The reconciler reports `MATCH`, `DRIFT`, `NOT PUSHED`, `PR OPEN`, `ACTIONS PENDING`, `ACTIONS FAILED`, `INSTALL OUTDATED`, `UNRELEASED`, and `NOT CHECKED`. It does not fetch, commit, push, merge, publish, Tag, Release, install, or replace files.
+
 ## Exit codes
 
 | Code | Verdict | Meaning |
@@ -39,4 +47,4 @@ Notes do not change a CLEAN exit code.
 
 ## Limits
 
-The CLI performs static checks. It does not prove real business behavior, visual quality, export quality, copyright compliance, dependency safety, or production readiness.
+The static gate does not prove real business behavior, visual quality, export quality, copyright compliance, dependency safety, or production readiness. Public-surface fingerprint checks prove that review evidence targets the current files, not that a design is aesthetically correct.

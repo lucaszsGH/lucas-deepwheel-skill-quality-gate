@@ -12,4 +12,8 @@
 - [x] Safe installer dry run and existing-target refusal are verified.
 - [x] Original draft and installed copy remain unchanged during source preparation.
 - [x] Clean private-repository clone test passes before Tag or Release.
+- [x] Read-only reconciliation distinguishes local, GitHub main/PR, Actions, release metadata and installed-snapshot states.
+- [x] Public-surface review binds the exact Skill state to reviewed README, examples, installation guidance and bilingual introduction assets.
+- [x] User-visible capability changes require refreshed English/Chinese SVG and PNG assets; stale evidence cannot return CLEAN.
+- [x] Quality Gate reports required repairs but does not modify README or image assets itself.
 - [x] No public visibility change, direct main push, Tag, Release, branch deletion, or installation replacement occurs without separate confirmation.
