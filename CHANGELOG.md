@@ -2,6 +2,12 @@
 
 All notable user-visible changes are recorded here.
 
+## [Unreleased]
+
+### Fixed
+
+- Made the Lucas-DeepWheel family publication audit independent of Quality Gate-specific CLI, validator, release-template, and test filenames; documented that third-party Skills may need a tailored baseline.
+
 ## [0.1.0-rc.1] - 2026-07-11
 
 ### Added

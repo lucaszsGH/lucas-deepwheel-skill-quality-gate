@@ -92,6 +92,29 @@ class QualityGateBehaviorTests(unittest.TestCase):
         self.assertEqual(payload["summary"]["verdict"], "BLOCK")
         self.assertNotIn(str(ROOT), result.stdout)
 
+    def test_publication_audit_does_not_require_quality_gate_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "generic-publication"
+            shutil.copytree(ROOT, publication)
+            optional_product_files = (
+                ".github/RELEASE_TEMPLATE.md",
+                "docs/CLI.md",
+                "scripts/validate-lucas-deepwheel-quality-gate.py",
+                "tests/test_skill_quality_gate.py",
+            )
+            for relative in optional_product_files:
+                path = publication / relative
+                if path.exists():
+                    path.unlink()
+            target_skill = publication / "skills" / SKILL_NAME
+            result = run_gate(
+                str(target_skill),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+
     def test_complete_publication_package_is_clean(self) -> None:
         result = run_gate(str(SKILL), "--publication-dir", str(ROOT))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
