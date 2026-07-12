@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.0-rc.3] - 2026-07-12
+
+- Block public release of high-risk personalized numeric guidance when professional sign-off is missing, pending or stale.
+- Allow an explicitly education-only, numeric-disabled high-risk candidate to remain CONCERNS while awaiting professional review.
+
 ## [0.1.0-rc.2] - 2026-07-12
 
 - Add machine-readable risk profiles.

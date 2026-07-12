@@ -154,6 +154,7 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "human_review_required": True,
                 "source_provenance_required": True,
                 "refusal_rules_required": True,
+                "personalized_numeric_guidance_enabled": True,
                 "numeric_safety_contract_required": True,
                 "numeric_contract_path": "scripts/case_contract.py",
             }
@@ -250,6 +251,7 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "human_review_required": True,
                 "source_provenance_required": True,
                 "refusal_rules_required": True,
+                "personalized_numeric_guidance_enabled": True,
                 "numeric_safety_contract_required": True,
                 "numeric_contract_path": "scripts/case_contract.py",
             }
@@ -345,6 +347,7 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "human_review_required": True,
                 "source_provenance_required": True,
                 "refusal_rules_required": True,
+                "personalized_numeric_guidance_enabled": True,
                 "numeric_safety_contract_required": True,
                 "numeric_contract_path": "scripts/case_contract.py",
             }
@@ -383,12 +386,25 @@ class QualityGateBehaviorTests(unittest.TestCase):
                 "--publication-dir",
                 str(publication),
             )
-        self.assertEqual(pending.returncode, 1, pending.stdout + pending.stderr)
+            profile["personalized_numeric_guidance_enabled"] = False
+            profile["unreviewed_output_policy"] = "education_only_with_safety_routes"
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            signoff.write_text("# Sign-off\n\nStatus: PENDING\n", encoding="utf-8")
+            education_only_pending = run_gate(
+                str(target),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(pending.returncode, 2, pending.stdout + pending.stderr)
         self.assertIn("high-risk professional sign-off is incomplete", pending.stdout)
-        self.assertEqual(mismatched.returncode, 1, mismatched.stdout + mismatched.stderr)
+        self.assertEqual(mismatched.returncode, 2, mismatched.stdout + mismatched.stderr)
         self.assertIn("professional sign-off target does not match current Skill", mismatched.stdout)
         self.assertEqual(approved.returncode, 0, approved.stdout + approved.stderr)
         self.assertIn("Skill Quality Gate: CLEAN", approved.stdout)
+        self.assertEqual(education_only_pending.returncode, 1, education_only_pending.stdout + education_only_pending.stderr)
+        self.assertIn("high-risk professional sign-off is incomplete", education_only_pending.stdout)
 
     def test_complete_publication_package_is_clean(self) -> None:
         result = run_gate(str(SKILL), "--publication-dir", str(ROOT))
