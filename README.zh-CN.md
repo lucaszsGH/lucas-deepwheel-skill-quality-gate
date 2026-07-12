@@ -2,7 +2,7 @@
 
 [English](README.md) | **简体中文**
 
-状态：公开发布候选版；当前版本 0.1.0-rc.5。
+状态：公开发布候选版；当前版本 0.1.0-rc.6。
 
 ![DeepWheel Skill 质量门禁：以证据把关，发布才可信](assets/intro/quality-gate-hero-zh-CN.png)
 

@@ -13,7 +13,7 @@ from urllib.parse import quote
 
 
 SKIP_PARTS = {".git", "__pycache__"}
-SKIP_NAMES = {".DS_Store"}
+SKIP_NAMES = {".DS_Store", ".installed-version"}
 CONCERN_CODES = {
     "DRIFT", "NOT PUSHED", "PR OPEN", "ACTIONS PENDING", "INSTALL OUTDATED",
 }

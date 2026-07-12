@@ -1,5 +1,13 @@
 # Test Runs
 
+## 2026-07-12 · rc.6 installed-version reconciliation hotfix
+
+- Version target: 0.1.0-rc.6; no Tag or Release created.
+- Installation fingerprinting ignores only the installer-owned `.installed-version` metadata file.
+- Regression coverage proves an otherwise identical installed Skill remains MATCH when the marker is present.
+- Public capability and bilingual image meaning are unchanged; the public-surface decision is `internal_only / NO_CHANGE_REQUIRED`.
+- Behavior tests: 31 / 31 PASS.
+
 ## 2026-07-12 · rc.5 GitHub synchronization and public-surface candidate
 
 - Version target: 0.1.0-rc.5; no Tag or Release created.

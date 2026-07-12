@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Status: public release candidate; current version 0.1.0-rc.5.
+Status: public release candidate; current version 0.1.0-rc.6.
 
 ![DeepWheel Skill Quality Gate: gate with evidence and release with confidence](assets/intro/quality-gate-hero-en.png)
 

@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "skill_name": "lucas-deepwheel-skill-quality-gate",
-  "capability_change": "user_visible",
-  "decision": "UPDATED",
-  "reason": "rc.5 adds GitHub and installed-state reconciliation plus public-description and bilingual-visual freshness gating, so both language surfaces and introduction assets were updated.",
-  "reviewed_skill_sha256": "26356aa1b1c4b7cff16bdcb6981585b68fd5e64fc5d48def59f382341fb51d49",
+  "capability_change": "internal_only",
+  "decision": "NO_CHANGE_REQUIRED",
+  "reason": "rc.6 only corrects installed-state fingerprinting for installer-owned metadata; public capability, workflow, and bilingual visual meaning remain unchanged.",
+  "reviewed_skill_sha256": "2ee25dbcb261e786d0ef088e1e6a1e0c12d6b8b40bedee1b109e6f982abcadee",
   "public_files": [
     "README.md",
     "README.zh-CN.md",
@@ -20,15 +20,6 @@
     "assets/intro/quality-gate-workflow-zh-CN.svg",
     "assets/intro/quality-gate-workflow-zh-CN.png"
   ],
-  "public_surface_sha256": "6c2e7057afab47e17aae1f58357443c380e9d38f282ef4b38c05486dda69bf30",
-  "updated_assets": [
-    "assets/intro/quality-gate-hero-en.svg",
-    "assets/intro/quality-gate-hero-en.png",
-    "assets/intro/quality-gate-hero-zh-CN.svg",
-    "assets/intro/quality-gate-hero-zh-CN.png",
-    "assets/intro/quality-gate-workflow-en.svg",
-    "assets/intro/quality-gate-workflow-en.png",
-    "assets/intro/quality-gate-workflow-zh-CN.svg",
-    "assets/intro/quality-gate-workflow-zh-CN.png"
-  ]
+  "public_surface_sha256": "77ab8b8f5907ddd01be5fbaaf72b9b1723b6bab7236e54c23b2f9ef48ae10bd2",
+  "updated_assets": []
 }

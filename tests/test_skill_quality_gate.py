@@ -111,6 +111,26 @@ class QualityGateBehaviorTests(unittest.TestCase):
         self.assertEqual(statuses["github_branch"], "MATCH")
         self.assertEqual(statuses["installation"], "MATCH")
 
+    def test_release_state_reconciler_ignores_installed_version_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo, skill, installed = make_release_state_fixture(Path(temp))
+            (installed / ".installed-version").write_text("0.1.0-rc.1\n", encoding="utf-8")
+            result = subprocess.run(
+                [
+                    "python3", str(RECONCILER), str(repo),
+                    "--skill-dir", str(skill),
+                    "--installed-skill-dir", str(installed),
+                    "--offline", "--json",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        statuses = {item["area"]: item["code"] for item in payload["statuses"]}
+        self.assertEqual(statuses["installation"], "MATCH")
+
     def test_release_state_reconciler_detects_not_pushed_and_install_outdated(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             repo, skill, installed = make_release_state_fixture(Path(temp))
