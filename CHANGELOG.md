@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.0-rc.6] - 2026-07-12
+
+- Ignore the installer's `.installed-version` metadata when comparing source and installed Skill bodies.
+- Add a regression test proving an otherwise identical installation remains `MATCH` when the version marker is present.
+- Allow an internal-only public-surface review to record `NO_CHANGE_REQUIRED` without claiming that bilingual images changed.
+
 ## [0.1.0-rc.5] - 2026-07-12
 
 - Accept double-quoted, single-quoted, folded, literal and unquoted YAML description scalars without false frontmatter failures.

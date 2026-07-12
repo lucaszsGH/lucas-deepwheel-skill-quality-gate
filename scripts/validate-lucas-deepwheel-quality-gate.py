@@ -151,6 +151,7 @@ for term in (
     "ACTIONS PENDING",
     "ACTIONS FAILED",
     "INSTALL OUTDATED",
+    ".installed-version",
     "UNRELEASED",
     "gh_json",
     "safe_tree",
@@ -182,6 +183,7 @@ if publication is not None:
             fail(f"behavior test file misses high-risk marker: {marker}")
     for marker in (
         "test_release_state_reconciler_reports_offline_match",
+        "test_release_state_reconciler_ignores_installed_version_marker",
         "test_release_state_reconciler_detects_not_pushed_and_install_outdated",
         "test_release_state_reconciler_reports_pr_open_and_actions_failed",
         "test_missing_public_surface_manifest_returns_visual_asset_stale",
@@ -198,11 +200,18 @@ if publication is not None:
     for key, expected in (
         ("schema_version", 1),
         ("skill_name", "lucas-deepwheel-skill-quality-gate"),
-        ("capability_change", "user_visible"),
-        ("decision", "UPDATED"),
     ):
         if surface_data.get(key) != expected:
             fail(f"public-surface review manifest has unexpected {key}")
+    review_pair = (
+        surface_data.get("capability_change"),
+        surface_data.get("decision"),
+    )
+    if review_pair not in {
+        ("user_visible", "UPDATED"),
+        ("internal_only", "NO_CHANGE_REQUIRED"),
+    }:
+        fail("public-surface review manifest has an invalid decision pair")
 
     intro = publication / "assets" / "intro"
     required_intro_copy = {
@@ -214,9 +223,9 @@ if publication is not None:
     for name, marker in required_intro_copy.items():
         asset = intro / name
         if not asset.is_file():
-            fail(f"missing rc.5 introduction asset: {name}")
+            fail(f"missing introduction asset: {name}")
         if marker not in asset.read_text(encoding="utf-8"):
-            fail(f"rc.5 introduction asset misses required copy: {name}")
+            fail(f"introduction asset misses required copy: {name}")
     workflow = publication / ".github" / "workflows" / "validate.yml"
     if not workflow.is_file():
         fail("validation workflow is missing")
