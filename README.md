@@ -102,3 +102,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Changes to scanner behavior must include
 ## License
 
 MIT License. See [LICENSE](LICENSE).
+
+## High-risk domain gate
+
+A Skill whose entrypoint covers health, medical, genetic, nutrition, legal or financial decisions must provide agents/risk-profile.json. Missing or under-classified consent, human-review, provenance or refusal controls returns BLOCK.
+
+The machine gate verifies declared fields and the presence of entrypoint controls; it does not prove that domain logic is correct. High-risk Skills still require expert and behavioral review.

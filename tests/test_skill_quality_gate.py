@@ -115,6 +115,213 @@ class QualityGateBehaviorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
 
+    def test_high_risk_skill_without_profile_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            (target / "agents" / "risk-profile.json").unlink()
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a health nutrition genetic Skill",
+                1,
+            )
+            skill_md.write_text(text, encoding="utf-8")
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("machine-readable risk profile is missing", result.stdout)
+
+    def test_high_risk_skill_with_controls_can_be_clean(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a health nutrition genetic Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "genetics", "nutrition"],
+                "sensitive_data": ["genetic_data", "health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+                "numeric_safety_contract_required": True,
+                "numeric_contract_path": "scripts/case_contract.py",
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            contract = target / "scripts" / "case_contract.py"
+            contract.write_text("print('synthetic contract')\n", encoding="utf-8")
+            contract.chmod(contract.stat().st_mode | 0o100)
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+
+    def test_high_risk_missing_entrypoint_boundary_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace("安全边界", "边界章节")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a genetic nutrition Skill",
+                1,
+            )
+            text += "\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "genetics", "nutrition"],
+                "sensitive_data": ["genetic_data", "health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("high-risk boundary control is missing", result.stdout)
+
+    def test_numeric_high_risk_skill_without_contract_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a genetic nutrition supplement dose Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "nutrition"],
+                "sensitive_data": ["health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("numeric high-risk guidance lacks a machine safety contract", result.stdout)
+
+    def test_nonexecutable_numeric_contract_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Use when evaluating",
+                "Use when evaluating a genetic nutrition supplement dose Skill",
+                1,
+            )
+            text += "\n## 安全边界\n同意、来源、停止与专业复核必须明确。\n"
+            skill_md.write_text(text, encoding="utf-8")
+            profile = {
+                "schema_version": 1,
+                "risk_level": "high",
+                "domains": ["health", "nutrition"],
+                "sensitive_data": ["health_data"],
+                "consent_required": True,
+                "human_review_required": True,
+                "source_provenance_required": True,
+                "refusal_rules_required": True,
+                "numeric_safety_contract_required": True,
+                "numeric_contract_path": "scripts/case_contract.py",
+            }
+            (target / "agents" / "risk-profile.json").write_text(
+                json.dumps(profile), encoding="utf-8"
+            )
+            contract = target / "scripts" / "case_contract.py"
+            contract.write_text("print('synthetic contract')\n", encoding="utf-8")
+            contract.chmod(0o644)
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("numeric safety contract is not executable", result.stdout)
+
+    def test_high_risk_signal_in_reference_is_detected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            (target / "agents" / "risk-profile.json").unlink()
+            (target / "references" / "domain.md").write_text(
+                "Recommend a supplement dose.", encoding="utf-8"
+            )
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("machine-readable risk profile is missing", result.stdout)
+
+    def test_english_substrings_do_not_trigger_high_risk(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / SKILL_NAME
+            shutil.copytree(SKILL, target)
+            (target / "agents" / "risk-profile.json").unlink()
+            policy = target / "references" / "high-risk-domain-policy.md"
+            if policy.exists():
+                policy.unlink()
+            skill_md = target / "SKILL.md"
+            text = skill_md.read_text(encoding="utf-8")
+            text += "\nSyntax, illegal characters, and system health check.\n"
+            skill_md.write_text(text, encoding="utf-8")
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+
+    def test_missing_bilingual_intro_asset_returns_concerns(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target_skill = publication / "skills" / SKILL_NAME
+            (publication / "assets" / "intro" / "quality-gate-hero-zh-CN.png").unlink()
+            result = run_gate(
+                str(target_skill),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("bilingual GitHub introduction asset is missing", result.stdout)
+
+    def test_incomplete_publication_checklist_returns_concerns(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            checklist = publication / "docs" / "PUBLICATION-CHECKLIST.md"
+            text = checklist.read_text(encoding="utf-8")
+            text = text.replace("- [x]", "- [ ]", 1)
+            checklist.write_text(text, encoding="utf-8")
+            target_skill = publication / "skills" / SKILL_NAME
+            result = run_gate(
+                str(target_skill),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("publication checklist has incomplete items", result.stdout)
+
     def test_complete_publication_package_is_clean(self) -> None:
         result = run_gate(str(SKILL), "--publication-dir", str(ROOT))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

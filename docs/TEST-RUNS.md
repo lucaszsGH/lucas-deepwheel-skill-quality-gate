@@ -34,3 +34,20 @@ Result: PASS.
   - temporary fresh install completed and matched the repository Skill body.
 - Original draft and installed copies: unchanged.
 - Installed copy replacement, GitHub repository, remote, push, Tag, and Release: not performed.
+
+## 2026-07-12 · high-risk domain gate
+
+- Version metadata: PASS for 0.1.0-rc.2
+- Generic and product-specific validators: PASS
+- Behavior tests: 19 PASS
+- Self-audit: CLEAN
+- High-risk Skill without risk profile: BLOCK
+- High-risk Skill missing entrypoint boundary: BLOCK
+- High-risk signal located only in references: BLOCK
+- English substring false-positive cases: CLEAN
+- Gene Nutrition structural and high-risk controls: PASS; publication readiness remains CONCERNS until its final human sign-off is recorded
+- Clean local branch clone: PASS
+- Missing bilingual introduction image: CONCERNS
+- Numeric high-risk guidance without a machine contract: BLOCK
+- Non-executable numeric safety contract: BLOCK
+- Incomplete publication checklist: CONCERNS

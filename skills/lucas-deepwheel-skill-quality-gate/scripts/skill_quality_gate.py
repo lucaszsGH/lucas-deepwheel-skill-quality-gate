@@ -90,6 +90,7 @@ PII_PATTERNS = {
 # for every Skill in the family. Third-party packages may need a tailored baseline.
 REQUIRED_PUBLICATION_FILES = (
     ".gitattributes",
+    "assets/intro/README.md",
     ".gitignore",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/workflows/validate.yml",
@@ -102,6 +103,8 @@ REQUIRED_PUBLICATION_FILES = (
     "VERSION",
     "docs/INSTALLATION.md",
     "docs/PUBLICATION-CHECKLIST.md",
+    "docs/REVIEW-RECORD.md",
+    "docs/ROADMAP.md",
     "docs/TEST-RUNS.md",
     "docs/VERSIONING.md",
     "examples/example-prompts.md",
@@ -109,6 +112,17 @@ REQUIRED_PUBLICATION_FILES = (
     "scripts/validate-lucas-deepwheel-skill.py",
     "scripts/validate-version.py",
     "scripts/verify-installed-copy.py",
+)
+
+INTRO_ASSET_SUFFIXES = (
+    "hero-en.svg",
+    "hero-en.png",
+    "hero-zh-CN.svg",
+    "hero-zh-CN.png",
+    "workflow-en.svg",
+    "workflow-en.png",
+    "workflow-zh-CN.svg",
+    "workflow-zh-CN.png",
 )
 
 CORE_GROUPS = (
@@ -127,6 +141,30 @@ POLICY_GROUPS = {
     "interaction and onboarding": ("首次", "下一步", "恢复", "渐进", "用户"),
     "capability claims": ("已支持", "需要工具", "暂不承诺"),
 }
+
+HIGH_RISK_ENGLISH_TERMS = (
+    "medical", "genetic", "nutrition", "clinical", "diagnosis", "treatment",
+    "supplement", "dose", "prescription", "legal", "financial", "investment", "tax",
+)
+NUMERIC_RISK_ENGLISH_TERMS = (
+    "dose", "dosing", "supplement amount", "intake amount", "upper intake level",
+)
+NUMERIC_RISK_CJK_TERMS = (
+    "剂量", "补充量", "摄入量", "耐受最高摄入量",
+)
+
+HIGH_RISK_CJK_TERMS = (
+    "医疗", "基因", "营养", "临床", "诊断", "治疗", "膳食", "补充剂", "剂量",
+    "疾病", "药物", "法律", "法务", "财务", "投资", "税务", "健康数据", "健康报告", "健康建议",
+)
+
+RISK_LEVELS = {"low", "medium", "high"}
+HIGH_RISK_BOOL_KEYS = (
+    "consent_required",
+    "human_review_required",
+    "source_provenance_required",
+    "refusal_rules_required",
+)
 
 
 def finding(severity: str, title: str, detail: str) -> dict[str, str]:
@@ -220,8 +258,121 @@ def parse_frontmatter(text: str) -> tuple[str, str] | None:
     return name, description
 
 
+def has_high_risk_signal(text: str) -> bool:
+    lower = text.lower()
+    for term in HIGH_RISK_ENGLISH_TERMS:
+        if re.search(r"\b" + re.escape(term) + r"\b", lower):
+            return True
+    return any(term in text for term in HIGH_RISK_CJK_TERMS)
+
+
+def has_numeric_safety_signal(text: str) -> bool:
+    lower = text.lower()
+    for term in NUMERIC_RISK_ENGLISH_TERMS:
+        if re.search(r"\b" + re.escape(term) + r"\b", lower):
+            return True
+    return any(term in text for term in NUMERIC_RISK_CJK_TERMS)
+
+
+def check_risk_profile(
+    skill: Path,
+    skill_text: str,
+    all_text: str,
+) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    high_risk_detected = has_high_risk_signal(all_text)
+    profile_path = skill / "agents" / "risk-profile.json"
+
+    if not profile_path.is_file():
+        severity = "critical" if high_risk_detected else "note"
+        findings.append(
+            finding(
+                severity,
+                "machine-readable risk profile is missing",
+                "add agents/risk-profile.json before public release",
+            )
+        )
+        return findings
+
+    try:
+        profile = json.loads(read_text(profile_path))
+    except (json.JSONDecodeError, OSError):
+        findings.append(
+            finding("critical", "risk profile is invalid", "agents/risk-profile.json")
+        )
+        return findings
+
+    if profile.get("schema_version") != 1:
+        findings.append(
+            finding("critical", "risk profile schema is unsupported", "schema_version must be 1")
+        )
+    level = profile.get("risk_level")
+    if level not in RISK_LEVELS:
+        findings.append(
+            finding("critical", "risk level is invalid", "use low, medium, or high")
+        )
+    meta_audit = profile.get("risk_context") == "meta_audit"
+    meta_entry = any(term in skill_text.lower() for term in ("audit", "evaluate", "check")) or "审计" in skill_text or "检查" in skill_text
+    if high_risk_detected and level != "high" and not (meta_audit and meta_entry):
+        findings.append(
+            finding("critical", "high-risk domain is under-classified", "risk_level must be high")
+        )
+
+    if level == "high":
+        domains = profile.get("domains")
+        if not isinstance(domains, list) or not domains:
+            findings.append(
+                finding("critical", "high-risk domains are missing", "declare one or more domains")
+            )
+        sensitive_data = profile.get("sensitive_data")
+        if not isinstance(sensitive_data, list) or not sensitive_data:
+            findings.append(
+                finding("critical", "high-risk sensitive data classes are missing", "declare sensitive_data")
+            )
+        for key in HIGH_RISK_BOOL_KEYS:
+            if profile.get(key) is not True:
+                findings.append(
+                    finding("critical", "high-risk control is disabled", key)
+                )
+        if has_numeric_safety_signal(all_text):
+            if profile.get("numeric_safety_contract_required") is not True:
+                findings.append(
+                    finding(
+                        "critical",
+                        "numeric high-risk guidance lacks a machine safety contract",
+                        "enable numeric_safety_contract_required",
+                    )
+                )
+            contract_path = profile.get("numeric_contract_path")
+            relative = Path(contract_path) if isinstance(contract_path, str) else None
+            safe_relative = (
+                relative is not None
+                and not relative.is_absolute()
+                and ".." not in relative.parts
+            )
+            if not safe_relative:
+                findings.append(
+                    finding("critical", "numeric safety contract path is invalid", "use a safe relative path")
+                )
+            elif not (skill / relative).is_file() or (skill / relative).is_symlink():
+                findings.append(
+                    finding("critical", "numeric safety contract file is missing", str(relative))
+                )
+            elif not ((skill / relative).stat().st_mode & 0o100):
+                findings.append(
+                    finding("critical", "numeric safety contract is not executable", str(relative))
+                )
+        for term in ("安全边界", "同意", "来源", "停止", "复核"):
+            if term not in skill_text:
+                findings.append(
+                    finding("critical", "high-risk boundary control is missing", term)
+                )
+    return findings
+
+
 def check_skill(skill: Path) -> tuple[list[dict[str, str]], str | None]:
     findings: list[dict[str, str]] = []
+    skill_text = ""
     if not skill.is_dir():
         return [
             finding(
@@ -242,6 +393,7 @@ def check_skill(skill: Path) -> tuple[list[dict[str, str]], str | None]:
         )
     else:
         text = read_text(skill_md)
+        skill_text = text
         parsed = parse_frontmatter(text)
         if parsed is None:
             findings.append(
@@ -304,6 +456,13 @@ def check_skill(skill: Path) -> tuple[list[dict[str, str]], str | None]:
                 )
 
     references = skill / "references"
+    risk_text = skill_text
+    if references.is_dir():
+        risk_text += "\n" + "\n".join(
+            read_text(path)
+            for path in sorted(references.rglob("*"))
+            if path.is_file() and path.suffix.lower() in TEXT_EXTENSIONS
+        )
     if not references.is_dir():
         findings.append(
             finding(
@@ -342,6 +501,7 @@ def check_skill(skill: Path) -> tuple[list[dict[str, str]], str | None]:
                 )
             )
 
+    findings.extend(check_risk_profile(skill, skill_text, risk_text))
     return findings, skill_name
 
 
@@ -367,6 +527,35 @@ def check_publication(
         if not (publication / relative).is_file():
             findings.append(
                 finding("warning", "publication file is missing", relative)
+            )
+
+    publication_checklist = publication / "docs" / "PUBLICATION-CHECKLIST.md"
+    if publication_checklist.is_file():
+        checklist_text = read_text(publication_checklist)
+        incomplete_items = re.findall(r"(?m)^\s*-\s*\[\s\]\s+", checklist_text)
+        if incomplete_items:
+            findings.append(
+                finding(
+                    "warning",
+                    "publication checklist has incomplete items",
+                    f"docs/PUBLICATION-CHECKLIST.md: {len(incomplete_items)} incomplete",
+                )
+            )
+
+    intro_dir = publication / "assets" / "intro"
+    intro_names = (
+        [path.name for path in intro_dir.iterdir() if path.is_file()]
+        if intro_dir.is_dir()
+        else []
+    )
+    for suffix in INTRO_ASSET_SUFFIXES:
+        if not any(name.endswith(suffix) for name in intro_names):
+            findings.append(
+                finding(
+                    "warning",
+                    "bilingual GitHub introduction asset is missing",
+                    suffix,
+                )
             )
 
     issue_dir = publication / ".github" / "ISSUE_TEMPLATE"
@@ -399,6 +588,20 @@ def check_publication(
                         readme_name,
                     )
                 )
+            language_suffixes = (
+                ("hero-en.png", "workflow-en.png")
+                if readme_name == "README.md"
+                else ("hero-zh-CN.png", "workflow-zh-CN.png")
+            )
+            for suffix in language_suffixes:
+                if "assets/intro/" not in text or suffix not in text:
+                    findings.append(
+                        finding(
+                            "warning",
+                            "README does not route to its language-specific introduction asset",
+                            readme_name + ": " + suffix,
+                        )
+                    )
 
     for term in ("Quick Start", "Installation", "Security", "Contributing", "License"):
         if term.lower() not in publication_text.lower():

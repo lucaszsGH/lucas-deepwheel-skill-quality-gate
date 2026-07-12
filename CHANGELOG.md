@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.0-rc.2] - 2026-07-12
+
+- Add machine-readable risk profiles.
+- Block under-classified health, genetics, nutrition, legal and financial Skills.
+- Require consent, human review, source provenance and refusal controls for high-risk Skills.
+- Add positive and negative high-risk behavior tests.
+- Require bilingual GitHub hero and workflow assets for CLEAN publication readiness.
+- Require a publication roadmap in the DeepWheel family baseline.
+- Require a machine contract for numeric high-risk guidance.
+- Prevent CLEAN when the publication checklist still contains incomplete items.
+- Require a recorded review document in the DeepWheel publication baseline.
+
 All notable user-visible changes are recorded here.
 
 ## [Unreleased]
