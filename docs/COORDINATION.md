@@ -20,7 +20,20 @@
 - **⚠️ 交叉高发区**：上述改动使 skill 指纹变化 = **user_visible**，将按 Codex 的 public-surface 机制更新
   `docs/PUBLIC-SURFACE-REVIEW.json`（可能需同步 README / description / 双语介绍图）。
   **Codex 若并行改公开面闸（`check_public_surface_review` / `reconcile_release_state.py` / 该 manifest），请先与本认领同步。**
-- **状态**：进行中。
+- **状态**：✅ 已完成并上线（2026-07-13,`db913f7`,VERSION `0.1.0-rc.7`）。见下方完成记录。
+
+## ✅ 完成记录
+
+### 2026-07-13 · Claude（张帅）· 门禁 rc.7 已上线（此认领结清）
+认领的门禁增强全部完成并推送,实际交付比原认领更多:
+- token 量级估算 + 上手/引导硬核验（4 检查 + `payload.token_layers` 量级表,表绝不走 finding）
+- **角色感知 `--audience public|private`**：切换审计**视角**（对外第三方 vs 作者自用），**非松紧**（Lucas 明确"对外/自用只是审计视角,不是严格宽松"）;public 对 `FACADE_LIFT_SET` 做 note→warning（LIFT=A Lucas 拍）、private 把 facade 整组 SUPPRESS+汇总 NOTE、private+publication=publishing strict
+- **全程助手 `--stage start|final`**：start=脚手架清单（exit 0,verdict DRAFTING）,final=严格审计（默认）
+- **价值增项 `--report`**：markdown 体检卡（含诚实声明+指纹）+ `payload.remediation_plan` 修复优先级
+- 双语 Hero/Workflow 介绍图从「Skill 作者收益」视角重做并重渲（8 个 SVG+PNG）
+- `docs/PUBLIC-SURFACE-REVIEW.json` 已按 **user_visible / UPDATED** 签、列 8 张双语图、两个指纹重算
+- **74 测试全绿**,自审（含 `--publication-dir`）CLEAN
+**与 Codex 的 public-surface 闸无残留冲突**（manifest 已正确签 UPDATED）。门禁现处 rc.7,Codex 后续改动照常在本文件登记范围。
 
 ## 约定
 - 改共享文件前先在本文件登记认领 + 范围。
