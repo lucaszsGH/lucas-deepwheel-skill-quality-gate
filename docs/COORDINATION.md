@@ -33,7 +33,10 @@
 - 双语 Hero/Workflow 介绍图从「Skill 作者收益」视角重做并重渲（8 个 SVG+PNG）
 - `docs/PUBLIC-SURFACE-REVIEW.json` 已按 **user_visible / UPDATED** 签、列 8 张双语图、两个指纹重算
 - **74 测试全绿**,自审（含 `--publication-dir`）CLEAN
-**与 Codex 的 public-surface 闸无残留冲突**（manifest 已正确签 UPDATED）。门禁现处 rc.7,Codex 后续改动照常在本文件登记范围。
+**与 Codex 的 public-surface 闸无残留冲突**（manifest 已正确签 UPDATED）。
+
+### 2026-07-13 · Claude（张帅）· rc.8（O5 修复,追加）
+references-nested / interaction-and-onboarding 关键词策略对 `skill_type=domain` 降 WARNING→NOTE(tool/meta/未声明仍 WARNING),让大型自包含域 Skill(如 brand-apply)不被结构规则拖成 CONCERNS(brand-apply 已转 CLEAN)。manifest 按 `internal_only/NO_CHANGE_REQUIRED` 签(O5 是内部检查精化、介绍图无需改)。门禁现处 **rc.8**。Codex 后续改动照常在本文件登记范围。
 
 ## 约定
 - 改共享文件前先在本文件登记认领 + 范围。

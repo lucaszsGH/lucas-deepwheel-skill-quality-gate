@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.0-rc.8] - 2026-07-13
+
+- **O5 — relax structural checks for large self-contained `domain` Skills**. A `skill_type=domain` Skill (e.g. a brand system embedding a full manual + chart atlas) must group its `references/` into sub-folders, so nested references are downgraded from WARNING to NOTE for `domain` (still WARNING for tool/meta/undeclared). Likewise the `interaction and onboarding` keyword policy (failure-recovery / progressive-disclosure wording) is downgraded to NOTE for `domain`, since one-shot generation Skills don't run that interaction flow. This stops compliant large domain Skills from being dragged to CONCERNS by inapplicable structural rules.
+
 ## [0.1.0-rc.7] - 2026-07-13
 
 - **Token magnitude estimate + onboarding hard-check**: scan a target Skill's layers and report entry/typical/full token magnitude (a magnitude estimate, not a precise tokenizer); flag a missing first-success path, a large Skill without progressive-disclosure guidance, unguided heavy reference/asset files, and a heavy entrypoint. The magnitude table rides in `payload.token_layers`, never as a finding.

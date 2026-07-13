@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "skill_name": "lucas-deepwheel-skill-quality-gate",
-  "capability_change": "user_visible",
-  "decision": "UPDATED",
-  "reason": "rc.7 adds four user-visible capabilities — token magnitude estimate, onboarding hard-check, audience-perspective review, and lifecycle stage plus a shareable report. The bilingual Hero and Workflow introduction assets were rewritten from the Skill author's benefit and re-rendered, so this is recorded as user_visible/UPDATED with the bilingual SVG+PNG assets listed as updated.",
-  "reviewed_skill_sha256": "46dd17104cf3742ea46f215686ace91f447b86cf9c6164f79d7cabd896873f83",
+  "capability_change": "internal_only",
+  "decision": "NO_CHANGE_REQUIRED",
+  "reason": "rc.8 relaxes two structural checks — nested references and the onboarding keyword policy — to NOTE for domain Skills (O5), so large self-contained domain Skills are not dragged to CONCERNS. This is an internal check refinement; the gate workflow narrative and bilingual introduction visuals are unchanged, so no image update is required.",
+  "reviewed_skill_sha256": "057b93c2f8b4c7e19bbc6c17c42de5e4a1881e32f1511a925f11697d31f30836",
   "public_files": [
     "README.md",
     "README.zh-CN.md",
@@ -20,15 +20,6 @@
     "assets/intro/quality-gate-workflow-zh-CN.svg",
     "assets/intro/quality-gate-workflow-zh-CN.png"
   ],
-  "public_surface_sha256": "111e4839458475a45e4967f13faf193fe7f5a3c0c176465439ec36c6065c0547",
-  "updated_assets": [
-    "assets/intro/quality-gate-hero-en.svg",
-    "assets/intro/quality-gate-hero-en.png",
-    "assets/intro/quality-gate-hero-zh-CN.svg",
-    "assets/intro/quality-gate-hero-zh-CN.png",
-    "assets/intro/quality-gate-workflow-en.svg",
-    "assets/intro/quality-gate-workflow-en.png",
-    "assets/intro/quality-gate-workflow-zh-CN.svg",
-    "assets/intro/quality-gate-workflow-zh-CN.png"
-  ]
+  "public_surface_sha256": "6a5c8d1f8f0f6e896c5b3f61d3f08cebbd0803d3e26d6e4b3de43784ba1c2c94",
+  "updated_assets": []
 }

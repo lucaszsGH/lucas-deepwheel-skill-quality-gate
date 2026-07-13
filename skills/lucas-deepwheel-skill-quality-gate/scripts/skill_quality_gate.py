@@ -145,12 +145,14 @@ POLICY_GROUPS = {
     "capability claims": ("已支持", "需要工具", "暂不承诺"),
 }
 
-# O2:工具类 Skill 才需要的策略检查;自包含域 Skill(risk-profile skill_type=domain)对这些 N/A,降为 NOTE
+# O2/O5:工具类 Skill 才需要的策略检查;自包含域 Skill(risk-profile skill_type=domain)对这些 N/A,降为 NOTE。
+# interaction and onboarding 也纳入(O5):一次性生成物料的域 Skill 不涉及「失败恢复/渐进披露」交互,对 domain 降 NOTE。
 TOOL_ONLY_POLICY = frozenset({
     "new user capability preflight",
     "token budget policy",
     "companion Skill routing",
     "independent product entry",
+    "interaction and onboarding",
 })
 
 # ③ 命名规则:环境变量配置期望前缀(如 "lucas-deepwheel-")。
@@ -1092,6 +1094,15 @@ def check_skill(
             for path in sorted(references.rglob("*"))
             if path.is_file() and path.suffix.lower() in TEXT_EXTENSIONS
         )
+    # O2/O5:读 skill_type;自包含域 Skill 对工具类策略检查 N/A、且大型规范必须分层,均对 domain 降为 NOTE
+    skill_type = ""
+    _rp = skill / "agents" / "risk-profile.json"
+    if _rp.is_file():
+        try:
+            skill_type = str(json.loads(read_text(_rp)).get("skill_type", "")).lower()
+        except (json.JSONDecodeError, OSError):
+            skill_type = ""
+
     if not references.is_dir():
         findings.append(
             finding(
@@ -1101,9 +1112,10 @@ def check_skill(
             )
         )
     elif any(path.is_dir() for path in references.rglob("*")):
+        # O5:大型自包含域 Skill(手册/图鉴等)必须分层组织,references 嵌套对 domain 降 NOTE、不阻断
         findings.append(
             finding(
-                "warning",
+                "note" if skill_type == "domain" else "warning",
                 "references are nested",
                 "keep references one level deep",
             )
@@ -1117,15 +1129,6 @@ def check_skill(
                 "add agent metadata",
             )
         )
-
-    # O2:读 skill_type;自包含域 Skill 对工具类策略检查(OCR/token/companion/独立入口)N/A,降为 NOTE
-    skill_type = ""
-    _rp = skill / "agents" / "risk-profile.json"
-    if _rp.is_file():
-        try:
-            skill_type = str(json.loads(read_text(_rp)).get("skill_type", "")).lower()
-        except (json.JSONDecodeError, OSError):
-            skill_type = ""
 
     lower_text = all_text.lower()
     for label, terms in POLICY_GROUPS.items():

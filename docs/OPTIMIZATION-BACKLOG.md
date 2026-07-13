@@ -5,10 +5,8 @@
 
 ## 待修
 
-### O5 · references「一层深」规则对大型域 Skill 太严（P2，判准）
-- **现象**：`check_skill` 对 `references/` 下有子目录即报 WARNING「references are nested」。但完整规范型 Skill（如 lucas-deepwheel-brand-apply 内嵌手册 18 模块 + 图鉴 37 型 = 55 文件）必须按 `规范全集/`、`图形规格/型名/` 分层组织,拍平不可行。
-- **改法建议**：允许一个「白名单子目录」层（如 references 下的分组目录不算违规），或从 risk-profile 读 `bundled_spec: true` 时豁免嵌套检查。
-- **发现**：2026-07-13 审 lucas-deepwheel-brand-apply。
+### ✅ O5 已修（2026-07-13,rc.8）· 自动测试并入 O6
+- references-nested 与 interaction-and-onboarding 关键词策略对 `skill_type=domain` 降 WARNING→NOTE(tool/meta/未声明仍 WARNING);skill_type 读取提前到 references 检查前。brand-apply 实证转 **CLEAN**、72 测试无回归。**自动测试待补**(domain 降 NOTE / tool 保持 WARNING 两态),并入 O6。
 
 ### O6 · 新检查(命名/skill_type/同义章节)缺自动测试（P1，工程质量）
 - F2/F3/F4 三项新行为(见已修)当前靠手动验 + 24 原测试兜底,未加专门单测。
