@@ -820,5 +820,735 @@ class QualityGateBehaviorTests(unittest.TestCase):
         self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
 
 
+import re as _re
+
+CJK_FILL = "山"
+
+
+def cjk_block(n: int) -> str:
+    return CJK_FILL * n
+
+
+def copy_skill(temp: Path) -> Path:
+    target = temp / SKILL_NAME
+    shutil.copytree(SKILL, target)
+    return target
+
+
+def set_skill_type(target: Path, skill_type: str | None) -> None:
+    """Set/remove agents/risk-profile.json skill_type; preserve meta_audit exemption."""
+    path = target / "agents" / "risk-profile.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if skill_type is None:
+        data.pop("skill_type", None)
+    else:
+        data["skill_type"] = skill_type
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def strip_runnable_commands(target: Path) -> str:
+    """Remove fenced bash/sh/shell/console blocks from SKILL.md so first-success fails."""
+    md = target / "SKILL.md"
+    text = md.read_text(encoding="utf-8")
+    stripped = _re.sub(
+        r"```(?:bash|sh|shell|console)\b.*?```",
+        "\n（命令示例，已移除）\n",
+        text,
+        flags=_re.S | _re.I,
+    )
+    md.write_text(stripped, encoding="utf-8")
+    assert not quality_gate_scanner.has_runnable_command(stripped)
+    return stripped
+
+
+class TokenAndOnboardingTests(unittest.TestCase):
+    # 1. gate 审自己（无 publication）：CLEAN、退出码 0、含 token 量级区块、不崩
+    def test_self_audit_prints_token_magnitude_block(self) -> None:
+        result = run_gate(str(SKILL))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertIn("Token consumption magnitude", result.stdout)
+        self.assertIn("estimated", result.stdout)
+
+    # 2. --json：payload 三键、token_layers 关键字段、无 info、无绝对路径
+    def test_json_payload_has_token_layers_and_no_info_severity(self) -> None:
+        result = run_gate(str(SKILL), "--json")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        for key in ("summary", "findings", "token_layers"):
+            self.assertIn(key, payload)
+        for key in ("entry", "agent_facing_full", "all_text_full"):
+            self.assertIn(key, payload["token_layers"])
+        for item in payload["findings"]:
+            self.assertIn(item["severity"], {"critical", "warning", "note"})
+        self.assertNotIn(str(ROOT), result.stdout)
+
+    # 3. tool、~45K 中文 entry、无引导、有 ```bash（隔离 first-success）→ large WARNING
+    def test_tool_large_monolith_without_guidance_warns(self) -> None:
+        skill_md = (
+            "---\n"
+            "name: " + SKILL_NAME + "\n"
+            'description: "Use when auditing a Skill. Do not use for unrelated tasks."\n'
+            "---\n\n"
+            "# 门禁\n\n"
+            "本 Skill 用于审计与检查目标 Skill 的质量。\n\n"
+            "```bash\n"
+            "echo run-me\n"
+            "```\n\n"
+            + cjk_block(45000) + "\n"
+        )
+        self.assertTrue(quality_gate_scanner.has_runnable_command(skill_md))
+        self.assertFalse(quality_gate_scanner.has_progressive_disclosure(skill_md))
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            (target / "SKILL.md").write_text(skill_md, encoding="utf-8")
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CONCERNS", result.stdout)
+        self.assertIn("large skill without progressive disclosure", result.stdout)
+
+    # 4. domain、refs+assets >40K、SKILL.md 点名并含引导 → CLEAN、无 large WARNING（O5 健康路径）
+    def test_domain_large_with_guidance_is_clean(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "domain")
+            (target / "references" / "overview.md").write_text(cjk_block(25000), encoding="utf-8")
+            (target / "assets").mkdir(exist_ok=True)
+            (target / "assets" / "spec.md").write_text(cjk_block(20000), encoding="utf-8")
+            md = target / "SKILL.md"
+            md.write_text(
+                md.read_text(encoding="utf-8")
+                + "\n\n阅读顺序：先读 references/overview.md，需要时读 assets/spec.md，按需读取。\n",
+                encoding="utf-8",
+            )
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertNotIn("large skill without progressive disclosure", result.stdout)
+
+    # 5. tool、agent_facing >40K 但 SKILL.md 有 references/ 路径指针 → 无 big WARNING
+    def test_tool_large_with_pointer_has_no_big_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            (target / "references" / "parta.md").write_text(cjk_block(22000), encoding="utf-8")
+            (target / "references" / "partb.md").write_text(cjk_block(22000), encoding="utf-8")
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertNotIn("large skill without progressive disclosure", result.stdout)
+
+    # 6. tool、references/atlas.md >30K、SKILL.md 点名 atlas.md → 无 heavy finding
+    def test_tool_heavy_reference_named_is_clean(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            (target / "references" / "atlas.md").write_text(cjk_block(31000), encoding="utf-8")
+            md = target / "SKILL.md"
+            md.write_text(
+                md.read_text(encoding="utf-8") + "\n\n参见 references/atlas.md（按需读取）。\n",
+                encoding="utf-8",
+            )
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertNotIn("heavy file not guided", result.stdout)
+
+    # 7. tool、references/atlas.md >30K、从不提 atlas → heavy WARNING，detail 含相对路径且不回显内容
+    def test_tool_heavy_reference_unnamed_warns_with_relative_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            (target / "references" / "atlas.md").write_text(cjk_block(31000), encoding="utf-8")
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CONCERNS", result.stdout)
+        self.assertIn("heavy file not guided", result.stdout)
+        self.assertIn("references/atlas.md", result.stdout)
+        self.assertNotIn(cjk_block(200), result.stdout)
+
+    # 8. 同 7 但 domain → heavy 以 NOTE 降级，退出码 0、CLEAN
+    def test_domain_heavy_reference_unnamed_is_note(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "domain")
+            (target / "references" / "atlas.md").write_text(cjk_block(31000), encoding="utf-8")
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertIn("heavy file not guided", result.stdout)
+
+    # 9. tool、无命令无 quickstart 无 examples 无 publication → first-success WARNING
+    def test_tool_missing_first_success_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            strip_runnable_commands(target)
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CONCERNS", result.stdout)
+        self.assertIn("first-success path missing", result.stdout)
+
+    # 10. 同 9 但 domain → first-success 仅 NOTE，退出码 0、CLEAN
+    def test_domain_missing_first_success_is_note(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "domain")
+            strip_runnable_commands(target)
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertIn("first-success path missing", result.stdout)
+
+    # 11. 同 9 但 risk-profile.json 无 skill_type（未声明，像门禁本身）→ 仅 NOTE、CLEAN
+    def test_undeclared_type_missing_first_success_is_note(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, None)
+            strip_runnable_commands(target)
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertIn("first-success path missing", result.stdout)
+
+    # 12. tool、散文含 '详见 ./references/foo.md' 和 'run it with bash later'，无 fenced 块 → first-success 仍触发
+    def test_prose_bash_and_path_are_not_commands(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            strip_runnable_commands(target)
+            md = target / "SKILL.md"
+            md.write_text(
+                md.read_text(encoding="utf-8")
+                + "\n\n补充说明：详见 ./references/foo.md ，run it with bash later。\n",
+                encoding="utf-8",
+            )
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CONCERNS", result.stdout)
+        self.assertIn("first-success path missing", result.stdout)
+
+    # 13. Part A：examples/ 非空即满足 first-success；Part B：--publication-dir 的 example-prompts.md 满足
+    def test_examples_satisfy_first_success_locally_and_via_publication(self) -> None:
+        # Part A: 裸 SKILL.md + 非空 examples/
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            strip_runnable_commands(target)
+            examples = target / "examples"
+            examples.mkdir(exist_ok=True)
+            (examples / "example.md").write_text("# 示例\n用户可先跑这个。\n", encoding="utf-8")
+            result_a = run_gate(str(target))
+        self.assertEqual(result_a.returncode, 0, result_a.stdout + result_a.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result_a.stdout)
+        self.assertNotIn("first-success path missing", result_a.stdout)
+        # Part B: 裸 skill + --publication-dir（其 examples/example-prompts.md 存在）
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target_skill = publication / "skills" / SKILL_NAME
+            set_skill_type(target_skill, "tool")
+            strip_runnable_commands(target_skill)
+            self.assertTrue((publication / "examples" / "example-prompts.md").is_file())
+            result_b = run_gate(str(target_skill), "--publication-dir", str(publication))
+        self.assertNotIn("first-success path missing", result_b.stdout)
+
+    # 14. tool、entry >8000 但有 fenced 命令、references 被点名 → entry-heavy NOTE 但仍 CLEAN
+    def test_tool_heavy_entry_is_note_not_verdict_change(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            md = target / "SKILL.md"
+            md.write_text(
+                md.read_text(encoding="utf-8") + "\n\n" + cjk_block(6000) + "\n",
+                encoding="utf-8",
+            )
+            result = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", result.stdout)
+        self.assertIn("entry SKILL.md is heavy", result.stdout)
+
+
+FORBIDDEN_COPY = ("模拟", "首次上手实测", "smoke test", "从严", "放宽", "更严", "更松", "放松")
+
+
+def big_monolith_skill_md(with_command: bool = True) -> str:
+    """Large SKILL.md, no progressive disclosure, missing core sections."""
+    command = "```bash\necho run\n```\n\n" if with_command else ""
+    return (
+        "---\n"
+        "name: " + SKILL_NAME + "\n"
+        'description: "Use when auditing a Skill. Do not use for unrelated tasks."\n'
+        "---\n\n"
+        "# 门禁\n\n" + command + cjk_block(45000) + "\n"
+    )
+
+
+class AudiencePerspectiveStageReportTests(unittest.TestCase):
+    # ── A：视角（audience）恒等与页脚 ──────────────────────────────────
+    def test_default_final_is_identity(self) -> None:
+        text = run_gate(str(SKILL))
+        self.assertEqual(text.returncode, 0, text.stdout + text.stderr)
+        self.assertIn("Skill Quality Gate: CLEAN", text.stdout)
+        self.assertIn("视角未声明", text.stdout)
+        payload = json.loads(run_gate(str(SKILL), "--json").stdout)
+        self.assertEqual(payload["summary"]["verdict"], "CLEAN")
+        self.assertNotIn("stage", payload["summary"])
+        self.assertIn("audience", payload)
+        self.assertIsNone(payload["audience"]["mode"])
+        self.assertEqual(payload["audience"]["source"], "default")
+        for item in payload["findings"]:
+            self.assertFalse(item["title"].startswith("audience."))
+            self.assertEqual(set(item.keys()), {"severity", "title", "detail"})
+
+    def test_default_footer_wording_not_misleading(self) -> None:
+        result = run_gate(str(SKILL))
+        self.assertIn("视角未声明", result.stdout)
+        self.assertIn("自然严重度", result.stdout)
+        self.assertIn("--audience public", result.stdout)
+        self.assertIn("--audience private", result.stdout)
+        self.assertNotIn("不含门面", result.stdout)
+        self.assertNotIn("不审门面", result.stdout)
+        for word in FORBIDDEN_COPY:
+            self.assertNotIn(word, result.stdout)
+
+    def test_findings_keep_three_keys_all_modes(self) -> None:
+        modes = (
+            [],
+            ["--audience", "public"],
+            ["--audience", "private"],
+            ["--audience", "private", "--publication-dir", str(ROOT)],
+            ["--stage", "start"],
+        )
+        for extra in modes:
+            payload = json.loads(run_gate(str(SKILL), "--json", *extra).stdout)
+            for item in payload["findings"]:
+                self.assertEqual(
+                    set(item.keys()), {"severity", "title", "detail"}, f"{extra}: {item}"
+                )
+
+    def test_public_activates_facade_lifts_first_success(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "domain")
+            strip_runnable_commands(target)
+            base = run_gate(str(target))
+            pub = run_gate(str(target), "--audience", "public")
+            pub_json = json.loads(
+                run_gate(str(target), "--audience", "public", "--json").stdout
+            )
+        self.assertEqual(base.returncode, 0, base.stdout)
+        self.assertIn("first-success path missing", base.stdout)
+        self.assertEqual(pub.returncode, 1, pub.stdout)
+        self.assertIn("Skill Quality Gate: CONCERNS", pub.stdout)
+        self.assertIn("审计视角：public", pub.stdout)
+        lifted = [
+            f for f in pub_json["findings"] if f["title"] == "first-success path missing"
+        ]
+        self.assertEqual([f["severity"] for f in lifted], ["warning"])
+        for word in FORBIDDEN_COPY:
+            self.assertNotIn(word, pub.stdout)
+
+    def test_public_lifts_usability_note_to_warning(self) -> None:
+        findings = [
+            quality_gate_scanner.finding(
+                "note",
+                "publication may miss a GitHub usability term",
+                "Security",
+                check_id="pub.usability_term",
+            )
+        ]
+        quality_gate_scanner.apply_audience_perspective(findings, "public", True, True)
+        self.assertEqual(findings[0]["severity"], "warning")
+
+    def test_public_highstar_addon_note_when_troubleshooting_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            pub = Path(temp) / "pub"
+            pub.mkdir()
+            (pub / "README.md").write_text("hello world Roadmap only\n", encoding="utf-8")
+            public_findings = quality_gate_scanner.check_publication(
+                pub, SKILL, SKILL_NAME, audience_public=True
+            )
+            default_findings = quality_gate_scanner.check_publication(
+                pub, SKILL, SKILL_NAME, audience_public=False
+            )
+        addons = [f for f in public_findings if f["title"] == "pub.highstar_addon"]
+        self.assertEqual(len(addons), 1)
+        self.assertEqual(addons[0]["severity"], "note")
+        self.assertNotIn(
+            "pub.highstar_addon", [f["title"] for f in default_findings]
+        )
+
+    def test_public_no_publication_emits_unevaluated_note(self) -> None:
+        result = run_gate(str(SKILL), "--audience", "public", "--json")
+        payload = json.loads(result.stdout)
+        titles = [f["title"] for f in payload["findings"]]
+        self.assertIn("audience.publication_unevaluated", titles)
+        self.assertNotIn("pub.highstar_addon", titles)
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_private_suppresses_facade_to_summary_note_not_downgrade(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            strip_runnable_commands(target)
+            base = json.loads(run_gate(str(target), "--json").stdout)
+            priv = json.loads(
+                run_gate(str(target), "--audience", "private", "--json").stdout
+            )
+        base_first = [
+            f for f in base["findings"] if f["title"] == "first-success path missing"
+        ]
+        self.assertEqual([f["severity"] for f in base_first], ["warning"])
+        priv_titles = [f["title"] for f in priv["findings"]]
+        self.assertNotIn("first-success path missing", priv_titles)
+        self.assertIn("audience.facade_unaudited", priv_titles)
+        self.assertEqual(priv["summary"]["verdict"], "CLEAN")
+
+    def test_private_summary_note_distinguishes_scope_vs_unevaluated(self) -> None:
+        payload = json.loads(
+            run_gate(str(SKILL), "--audience", "private", "--json").stdout
+        )
+        notes = [
+            f for f in payload["findings"] if f["title"] == "audience.facade_unaudited"
+        ]
+        self.assertEqual(len(notes), 1)
+        detail = notes[0]["detail"]
+        self.assertIn("已移出范围", detail)
+        self.assertIn("未评估", detail)
+        self.assertNotIn("关闭 9", detail)
+
+    def test_private_never_touches_security(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            shaped_value = "s" + "k-" + ("A" * 24)
+            (target / "leak-note.md").write_text(
+                "value = " + shaped_value + "\n", encoding="utf-8"
+            )
+            result = run_gate(str(target), "--audience", "private")
+        self.assertEqual(result.returncode, 2, result.stdout)
+        self.assertIn("provider credential shaped value found", result.stdout)
+        self.assertNotIn(shaped_value, result.stdout)
+
+    def test_private_never_touches_description_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            md = target / "SKILL.md"
+            text = md.read_text(encoding="utf-8")
+            text = text.replace(
+                "Do not use to execute risky target actions, auto-repair public assets, or replace real behavior tests.",
+                "Avoid executing risky target actions, auto-repairing public assets, or replacing real behavior tests.",
+                1,
+            )
+            md.write_text(text, encoding="utf-8")
+            payload = json.loads(
+                run_gate(str(target), "--audience", "private", "--json").stdout
+            )
+        do_not = [
+            f
+            for f in payload["findings"]
+            if f["title"] == "description lacks do-not-use boundary"
+        ]
+        self.assertEqual([f["severity"] for f in do_not], ["warning"])
+
+    def test_private_publishing_conflict_audits_facade_as_public(self) -> None:
+        # UNIT: effective=public → LIFT (不 suppress) + conflict NOTE
+        findings = [
+            quality_gate_scanner.finding(
+                "note",
+                "first-success path missing",
+                "x",
+                check_id="onboarding.first_success",
+            )
+        ]
+        quality_gate_scanner.apply_audience_perspective(findings, "private", True, True)
+        by_title = {f["title"]: f["severity"] for f in findings}
+        self.assertEqual(by_title.get("first-success path missing"), "warning")
+        titles = [f["title"] for f in findings]
+        self.assertIn("audience.private_publishing_conflict", titles)
+        self.assertNotIn("audience.facade_unaudited", titles)
+        # end-to-end: private + --publication-dir triggers publishing=strict conflict NOTE
+        payload = json.loads(
+            run_gate(
+                str(SKILL),
+                "--audience",
+                "private",
+                "--publication-dir",
+                str(ROOT),
+                "--json",
+            ).stdout
+        )
+        e2e_titles = [f["title"] for f in payload["findings"]]
+        self.assertIn("audience.private_publishing_conflict", e2e_titles)
+        self.assertNotIn("audience.facade_unaudited", e2e_titles)
+
+    def test_general_checks_identical_across_audiences(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "domain")
+            (target / "SKILL.md").write_text(big_monolith_skill_md(), encoding="utf-8")
+            severities = {}
+            for extra in ([], ["--audience", "public"], ["--audience", "private"]):
+                payload = json.loads(
+                    run_gate(str(target), "--json", *extra).stdout
+                )
+                large = [
+                    f["severity"]
+                    for f in payload["findings"]
+                    if f["title"] == "large skill without progressive disclosure"
+                ]
+                core = [
+                    f["severity"]
+                    for f in payload["findings"]
+                    if f["title"] == "SKILL.md may miss a core section"
+                ]
+                severities[tuple(extra)] = (large, core[:1])
+        # large_no_progressive stays note (domain) and core.section stays warning in all
+        for key, (large, core) in severities.items():
+            self.assertEqual(large, ["note"], key)
+            self.assertEqual(core, ["warning"], key)
+
+    def test_cli_audience_overrides_risk_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            path = target / "agents" / "risk-profile.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["audience"] = "private"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            payload = json.loads(
+                run_gate(str(target), "--audience", "public", "--json").stdout
+            )
+            text = run_gate(str(target), "--audience", "public")
+        self.assertEqual(payload["audience"]["mode"], "public")
+        self.assertEqual(payload["audience"]["source"], "cli")
+        self.assertIn("overrides risk-profile:private", text.stdout)
+        self.assertNotIn(
+            "audience.private_publishing_conflict",
+            [f["title"] for f in payload["findings"]],
+        )
+
+    def test_invalid_risk_profile_audience_falls_back_no_crash(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            path = target / "agents" / "risk-profile.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["audience"] = "xyz"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            result = run_gate(str(target), "--json")
+            text = run_gate(str(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertIsNone(payload["audience"]["mode"])
+        self.assertEqual(payload["audience"]["source"], "default")
+        self.assertFalse(
+            any(f["title"].startswith("audience.") for f in payload["findings"])
+        )
+        self.assertIn("视角未声明", text.stdout)
+
+    def test_no_simulation_or_strictness_wording(self) -> None:
+        modes = (
+            [],
+            ["--audience", "public"],
+            ["--audience", "private"],
+            ["--audience", "private", "--publication-dir", str(ROOT)],
+        )
+        for extra in modes:
+            text = run_gate(str(SKILL), *extra)
+            report = run_gate(str(SKILL), "--report", *extra)
+            for word in FORBIDDEN_COPY:
+                self.assertNotIn(word, text.stdout, f"{extra} text has {word}")
+                self.assertNotIn(word, report.stdout, f"{extra} report has {word}")
+            self.assertIn("静态核验", report.stdout)
+            self.assertIn("公开门面清单", report.stdout)
+
+    def test_no_info_severity_and_no_keyerror_any_mode(self) -> None:
+        json_modes = (
+            ["--audience", "public"],
+            ["--audience", "private"],
+            ["--audience", "private", "--publication-dir", str(ROOT)],
+            ["--stage", "start"],
+            ["--stage", "final"],
+        )
+        for extra in json_modes:
+            payload = json.loads(run_gate(str(SKILL), "--json", *extra).stdout)
+            for item in payload["findings"]:
+                self.assertIn(
+                    item["severity"], {"critical", "warning", "note"}, f"{extra}: {item}"
+                )
+        for extra in (
+            ["--audience", "public"],
+            ["--audience", "private"],
+            ["--stage", "start"],
+            ["--report"],
+        ):
+            result = run_gate(str(SKILL), *extra)
+            self.assertIn(result.returncode, (0, 1, 2), f"{extra}")
+            self.assertTrue(result.stdout.strip(), f"{extra} produced no output")
+        start = run_gate(str(SKILL), "--stage", "start")
+        self.assertIn("要件全景", start.stdout)
+
+    # ── B：--stage ────────────────────────────────────────────────────
+    def test_stage_final_equals_no_stage(self) -> None:
+        no_stage = run_gate(str(SKILL))
+        final = run_gate(str(SKILL), "--stage", "final")
+        self.assertEqual(no_stage.returncode, final.returncode)
+        no_stage_json = json.loads(run_gate(str(SKILL), "--json").stdout)
+        final_json = json.loads(
+            run_gate(str(SKILL), "--stage", "final", "--json").stdout
+        )
+        self.assertEqual(no_stage_json["summary"], final_json["summary"])
+        self.assertEqual(no_stage_json["findings"], final_json["findings"])
+
+    def test_stage_start_never_blocks_on_critical(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            (target / "SKILL.md").unlink()
+            text = run_gate(str(target), "--stage", "start")
+            payload = json.loads(
+                run_gate(str(target), "--stage", "start", "--json").stdout
+            )
+        self.assertEqual(text.returncode, 0, text.stdout)
+        self.assertIn("Skill Quality Gate: DRAFTING", text.stdout)
+        self.assertIn("◆地基", text.stdout)
+        self.assertEqual(payload["summary"]["verdict"], "DRAFTING")
+        self.assertEqual(payload["summary"]["stage"], "start")
+
+    def test_stage_start_security_shown_but_exit_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            shaped_value = "s" + "k-" + ("A" * 24)
+            (target / "leak-note.md").write_text(
+                "value = " + shaped_value + "\n", encoding="utf-8"
+            )
+            result = run_gate(str(target), "--stage", "start")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("Skill Quality Gate: DRAFTING", result.stdout)
+        self.assertIn("provider credential shaped value found", result.stdout)
+        self.assertNotIn(shaped_value, result.stdout)
+
+    def test_stage_start_does_not_suppress_facade(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            strip_runnable_commands(target)
+            result = run_gate(
+                str(target), "--stage", "start", "--audience", "private", "--json"
+            )
+        payload = json.loads(result.stdout)
+        titles = [f["title"] for f in payload["findings"]]
+        self.assertIn("first-success path missing", titles)
+        self.assertNotIn("audience.facade_unaudited", titles)
+        self.assertEqual(payload["summary"]["verdict"], "DRAFTING")
+        self.assertEqual(result.returncode, 0)
+
+    def test_stage_start_scaffold_subset_of_check_ids(self) -> None:
+        for family_name, ids, _is_gh in quality_gate_scanner.SCAFFOLD_FAMILIES:
+            for check_id in ids:
+                self.assertIn(
+                    check_id,
+                    quality_gate_scanner.ALL_CHECK_IDS,
+                    f"{family_name}: {check_id}",
+                )
+
+    def test_stage_start_gh_baseline_visible_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "domain")
+            default_start = run_gate(str(target), "--stage", "start")
+            private_start = run_gate(
+                str(target), "--stage", "start", "--audience", "private"
+            )
+        self.assertIn("对外发布门面", default_start.stdout)
+        self.assertNotIn("以后开源再看", default_start.stdout)
+        self.assertIn("以后开源再看", private_start.stdout)
+        self.assertIn("对外发布门面", private_start.stdout)
+
+    # ── C：--report / 修复优先级 ──────────────────────────────────────
+    def test_report_card_has_disclaimer_fingerprint_and_advice(self) -> None:
+        result = run_gate(str(SKILL), "--report")
+        out = result.stdout
+        self.assertIn("静态机器扫描", out)
+        self.assertIn("重跑", out)
+        self.assertRegex(out, r"[0-9a-f]{64}")
+        self.assertIn("可继续", out)
+        self.assertIn("未完成·需人工", out)
+        self.assertNotIn(str(ROOT), out)
+
+    def test_report_and_json_mutually_exclusive(self) -> None:
+        result = run_gate(str(SKILL), "--report", "--json")
+        self.assertEqual(result.returncode, 2)
+
+    def test_report_escapes_markdown_injection(self) -> None:
+        findings = [
+            quality_gate_scanner.finding(
+                "warning", "weird `x` | title", "detail with | pipe and `code`"
+            )
+        ]
+        summary = quality_gate_scanner.summarize(findings)
+        notice = quality_gate_scanner.audience_notice(None, "default", False, False)
+        report = quality_gate_scanner.render_report(
+            findings, summary, "0" * 64, "final", notice, {0: "质量"}
+        )
+        self.assertIn("\\|", report)
+        self.assertNotIn("`x`", report)
+        rows = [line for line in report.splitlines() if line.startswith("| 🟡")]
+        self.assertTrue(rows)
+        for row in rows:
+            self.assertEqual(row.count("|") - row.count("\\|"), 4, row)
+
+    def test_remediation_plan_ordered_and_catchall(self) -> None:
+        findings = [
+            quality_gate_scanner.finding(
+                "note", "n1", "d", check_id="pub.usability_term"
+            ),
+            quality_gate_scanner.finding(
+                "warning", "w1", "d", check_id="onboarding.first_success"
+            ),
+            quality_gate_scanner.finding("critical", "c1", "d"),
+            quality_gate_scanner.finding("warning", "w2", "d"),
+        ]
+        plan = quality_gate_scanner.build_remediation_plan(findings)
+        self.assertEqual(len(plan), len(findings))
+        self.assertEqual([e["title"] for e in plan], ["c1", "w1", "w2", "n1"])
+        lanes = {e["title"]: e["lane"] for e in plan}
+        self.assertEqual(lanes["c1"], "质量")
+        self.assertEqual(lanes["w2"], "质量")
+        self.assertEqual(lanes["w1"], "上手")
+        self.assertEqual(lanes["n1"], "发布")
+
+    def test_terminal_findings_keep_order_with_lane_tags(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, "tool")
+            strip_runnable_commands(target)
+            result = run_gate(str(target))
+        self.assertIn("first-success path missing", result.stdout)
+        self.assertIn("[上手]", result.stdout)
+        self.assertIn("建议修复顺序", result.stdout)
+        self.assertIn("先修这条", result.stdout)
+        self.assertNotIn(str(ROOT), result.stdout)
+
+    def test_ci_self_audit_publication_dir_still_clean(self) -> None:
+        # 主控收尾负责刷新 PUBLIC-SURFACE-REVIEW.json 指纹；本测试只焊死 audience 的
+        # 附加物不改变 default 自审 findings（drift-tolerant，指纹刷新前后皆绿）。
+        result = run_gate(str(SKILL), "--publication-dir", str(ROOT), "--json")
+        payload = json.loads(result.stdout)
+        self.assertIn("audience", payload)
+        self.assertIsNone(payload["audience"]["mode"])
+        self.assertEqual(payload["audience"]["source"], "default")
+        titles = [f["title"] for f in payload["findings"]]
+        self.assertNotIn("pub.highstar_addon", titles)
+        self.assertFalse(any(t.startswith("audience.") for t in titles))
+        for item in payload["findings"]:
+            self.assertEqual(set(item.keys()), {"severity", "title", "detail"})
+        for warning in [f for f in payload["findings"] if f["severity"] == "warning"]:
+            self.assertEqual(
+                warning["title"],
+                "VISUAL ASSET STALE",
+                "default self-audit must only be non-clean via fingerprint drift",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

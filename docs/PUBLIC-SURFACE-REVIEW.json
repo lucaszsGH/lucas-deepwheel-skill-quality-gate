@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "skill_name": "lucas-deepwheel-skill-quality-gate",
-  "capability_change": "internal_only",
-  "decision": "NO_CHANGE_REQUIRED",
-  "reason": "This gate update adds three internal gate checks — naming-convention prefix, skill_type awareness, and semantic section matching — plus their CHANGELOG entries. The gate workflow narrative and bilingual Hero/Workflow visuals are unchanged, so no image update is required. The README/description mention of the new naming check is deferred to the upcoming token-cost and onboarding public-surface refresh.",
-  "reviewed_skill_sha256": "890851df885bba508bcb19d151f39142c93b3974ba73ef065620ba7b2c111b60",
+  "capability_change": "user_visible",
+  "decision": "UPDATED",
+  "reason": "rc.7 adds four user-visible capabilities — token magnitude estimate, onboarding hard-check, audience-perspective review, and lifecycle stage plus a shareable report. The bilingual Hero and Workflow introduction assets were rewritten from the Skill author's benefit and re-rendered, so this is recorded as user_visible/UPDATED with the bilingual SVG+PNG assets listed as updated.",
+  "reviewed_skill_sha256": "46dd17104cf3742ea46f215686ace91f447b86cf9c6164f79d7cabd896873f83",
   "public_files": [
     "README.md",
     "README.zh-CN.md",
@@ -20,6 +20,15 @@
     "assets/intro/quality-gate-workflow-zh-CN.svg",
     "assets/intro/quality-gate-workflow-zh-CN.png"
   ],
-  "public_surface_sha256": "79e4a28a8c238a2637088bfbcc54c3a03430d9595842e28922d7aa1444cd091d",
-  "updated_assets": []
+  "public_surface_sha256": "111e4839458475a45e4967f13faf193fe7f5a3c0c176465439ec36c6065c0547",
+  "updated_assets": [
+    "assets/intro/quality-gate-hero-en.svg",
+    "assets/intro/quality-gate-hero-en.png",
+    "assets/intro/quality-gate-hero-zh-CN.svg",
+    "assets/intro/quality-gate-hero-zh-CN.png",
+    "assets/intro/quality-gate-workflow-en.svg",
+    "assets/intro/quality-gate-workflow-en.png",
+    "assets/intro/quality-gate-workflow-zh-CN.svg",
+    "assets/intro/quality-gate-workflow-zh-CN.png"
+  ]
 }

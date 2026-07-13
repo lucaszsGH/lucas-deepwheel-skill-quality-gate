@@ -122,7 +122,7 @@ python3 scripts/reconcile_release_state.py /path/to/repository --json
 
 退出码：
 
-- `0`：CLEAN；
+- `0`：CLEAN；`0` 现同时含 CLEAN 与 DRAFTING，DRAFTING 只出现在 `--stage start`；
 - `1`：CONCERNS；
 - `2`：BLOCK 或目标路径无效。
 
@@ -136,6 +136,24 @@ python3 scripts/reconcile_release_state.py /path/to/repository --json
   ```
 - **Skill 类型感知**：目标 Skill 的 `agents/risk-profile.json` 可声明 `skill_type`（`tool` / `domain` / `meta`）。`skill_type=domain`（自包含域 Skill，如品牌应用）时，工具类策略检查（新用户能力体检 OCR/音频、token 预算、关联 Skill 路由、独立入口）由 WARNING 降为 NOTE，避免误伤合规域 Skill；缺声明按保守全查。
 - **章节检测**认语义等价（标准流程≈生成流程、完成前验收≈交付前自检、什么时候不用≈什么时候不要使用等），不因措辞不同误报缺章节。
+
+## 审计视角、阶段与体检卡（2026-07-13 新增）
+
+三个可选开关，语义详见 `references/audience-perspective-and-stage-policy.md`。全程用「视角/尺子/审哪些/范围」措辞，不用「从严/放宽」。
+
+- **`--audience {public,private}`（视角/尺子，非松紧）**：不传 = 未声明，行为与今天逐字一致（findings/判定/退出码不变，只多 `payload.audience` 键与一行页脚）。
+  - `public`：以对外发布、陌生第三方使用者为尺子，把对外门面纳入审计并提为主线；对 `onboarding.first_success` 与 `pub.usability_term` 解除按类型的私用软化、还原门面固有 severity。
+  - `private`：以作者本人自用为尺子，审结构/功能/正确性/安全；把吸引陌生人的对外门面移出审计范围（不是降级，是移出，并追加一条汇总 NOTE）。安全、描述 Use-when/Do-not、critical 全模式全强度照审，private 绝不放水。
+  - `private` 一旦带 `--publication-dir`（正在发布 = 对外）→ 折叠为对外视角（publishing=strict），门面按对外审、不移出，另加冲突 NOTE，堵死发布放水。
+  - CLI `--audience` 覆盖 `agents/risk-profile.json` 顶层可选 `audience` 字段；横幅标来源 cli / risk-profile / default。
+- **`--stage {start,final}`（阶段）**：默认 `final` = 今天行为，CI 与发布前只认 `final`。`start` = 引导模式：恒退出码 0、判定 `DRAFTING`，打印「好 Skill 要件全景」目标态清单，安全/高风险 critical 置顶强提示但不拦；start 绝不删改 finding。
+- **`--report`（体检卡）**：输出 markdown 体检卡到标准输出，与 `--json` 互斥。带 verdict→建议映射、L1–L4 段标「未完成·需人工」、目标 Skill 的 tree_sha256 指纹，以及诚实声明「按公开门面清单静态核验、非生产质量认证、不替代 7 角色人工评审与真实业务行为测试」。`--report` 不是 CI 信号，CI 只认退出码。
+
+```bash
+python3 scripts/skill_quality_gate.py /path/to/target-skill --audience public --publication-dir /path/to/publication-package
+python3 scripts/skill_quality_gate.py /path/to/target-skill --stage start
+python3 scripts/skill_quality_gate.py /path/to/target-skill --report
+```
 
 ## 输出标准
 

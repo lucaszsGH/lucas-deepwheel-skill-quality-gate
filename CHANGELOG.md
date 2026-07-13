@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.0-rc.7] - 2026-07-13
+
+- **Token magnitude estimate + onboarding hard-check**: scan a target Skill's layers and report entry/typical/full token magnitude (a magnitude estimate, not a precise tokenizer); flag a missing first-success path, a large Skill without progressive-disclosure guidance, unguided heavy reference/asset files, and a heavy entrypoint. The magnitude table rides in `payload.token_layers`, never as a finding.
+- **Audience-perspective review (`--audience public|private`)**: switches the audit *lens*, not its leniency. `public` audits the Skill through an outside third-party user's eyes (onboarding, README/intro, bilingual public surface); `private` audits it through the author's own eyes and moves third-party facade checks out of scope with a single summary NOTE — general quality, security and description-boundary checks stay at full strength in every mode. Default (unset) is byte-identical to prior behavior.
+- **Lifecycle stage (`--stage start|final`)**: `start` returns a scaffolding checklist of what a good Skill needs and always exits 0 (verdict `DRAFTING`); `final` is the strict pre-publish audit and remains the default.
+- **Shareable report + fix ordering (`--report`)**: emit a Markdown scorecard carrying an honesty disclaimer and the reviewed-Skill fingerprint; findings gain a "fix this first" ordering in `payload.remediation_plan`.
+- Refresh the bilingual Hero and Workflow introduction assets to speak from the Skill author's benefit (onboarding, token cost, audience lens, lifecycle stage) instead of describing the gate's internals.
+
 ## [0.1.0-rc.6] - 2026-07-12
 
 - Ignore the installer's `.installed-version` metadata when comparing source and installed Skill bodies.
