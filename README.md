@@ -16,6 +16,7 @@ It checks:
 
 - structure and frontmatter;
 - capability claims and adjacent-task boundaries;
+- naming-convention conformance against a configurable name prefix (`SKILL_QUALITY_GATE_NAME_PREFIX`);
 - independent product entry and companion-Skill routing;
 - new-user capability preflight;
 - token and interaction policies;

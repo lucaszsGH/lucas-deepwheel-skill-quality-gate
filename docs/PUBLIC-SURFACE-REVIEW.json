@@ -3,8 +3,8 @@
   "skill_name": "lucas-deepwheel-skill-quality-gate",
   "capability_change": "internal_only",
   "decision": "NO_CHANGE_REQUIRED",
-  "reason": "rc.8 relaxes two structural checks — nested references and the onboarding keyword policy — to NOTE for domain Skills (O5), so large self-contained domain Skills are not dragged to CONCERNS. This is an internal check refinement; the gate workflow narrative and bilingual introduction visuals are unchanged, so no image update is required.",
-  "reviewed_skill_sha256": "057b93c2f8b4c7e19bbc6c17c42de5e4a1881e32f1511a925f11697d31f30836",
+  "reason": "1.0.0 first stable release. O7 documents the naming-convention check in the Skill description and the bilingual READMEs; O6 adds automated tests. These are public-surface wording additions plus test coverage; the gate workflow narrative and bilingual introduction visuals are unchanged, so no image update is required.",
+  "reviewed_skill_sha256": "29e8a67b32e04a79cdfb4bd5fe1ce05b5016d337240c6c888228b847595f0023",
   "public_files": [
     "README.md",
     "README.zh-CN.md",
@@ -20,6 +20,6 @@
     "assets/intro/quality-gate-workflow-zh-CN.svg",
     "assets/intro/quality-gate-workflow-zh-CN.png"
   ],
-  "public_surface_sha256": "6a5c8d1f8f0f6e896c5b3f61d3f08cebbd0803d3e26d6e4b3de43784ba1c2c94",
+  "public_surface_sha256": "edc07b9bcee2a7e4aabb94c3c4ca1f09dda1a40e0908ddf236660616bdeb307c",
   "updated_assets": []
 }

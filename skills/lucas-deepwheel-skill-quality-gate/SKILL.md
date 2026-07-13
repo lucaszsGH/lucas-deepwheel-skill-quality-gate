@@ -1,6 +1,6 @@
 ---
 name: lucas-deepwheel-skill-quality-gate
-description: "Use when evaluating, testing, red-teaming, preparing, updating, or publishing an Agent Skill. Checks structure, safety, capability claims, independent product entry, companion-Skill routing, new-user readiness, token cost, GitHub publishability, local/GitHub/Actions/install consistency, public-description and bilingual-visual freshness, and reuse potential. Use for Skills 质量门禁, GitHub 发布前检查, 修改后同步对账, 公开介绍一致性, 图片介绍过期检查, 独立产品入口检查, 新用户能力体检, 红蓝对抗, 安全审计. Do not use to execute risky target actions, auto-repair public assets, or replace real behavior tests."
+description: "Use when evaluating, testing, red-teaming, preparing, updating, or publishing an Agent Skill. Checks structure, safety, capability claims, independent product entry, companion-Skill routing, naming-convention, new-user readiness, token cost, GitHub publishability, local/GitHub/Actions/install consistency, public-description and bilingual-visual freshness, and reuse potential. Use for Skills 质量门禁, GitHub 发布前检查, 修改后同步对账, 公开介绍一致性, 图片介绍过期检查, 独立产品入口检查, 命名规则检查, 新用户能力体检, 红蓝对抗, 安全审计. Do not use to execute risky target actions, auto-repair public assets, or replace real behavior tests."
 ---
 
 # Lucas-DeepWheel Skill Quality Gate｜Skills 质量门禁

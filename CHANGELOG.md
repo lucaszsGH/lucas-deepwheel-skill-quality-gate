@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0] - 2026-07-13
+
+First stable release — consolidates every capability accumulated across rc.1–rc.8: structure/safety/privacy checks, capability-claim and new-user preflight, token magnitude estimate, onboarding hard-check, naming-convention check, skill_type awareness, semantic section detection, O5 structural relaxation for large domain Skills, audience-perspective review (`--audience`), lifecycle stage (`--stage`), shareable report (`--report`), and local/GitHub/Actions/install/public-surface reconciliation with bilingual introduction assets.
+
+- Document the naming-convention check in the Skill `description` and the bilingual READMEs (O7 — closes the public-surface wording gap).
+- Add automated tests covering the naming-prefix (set/unset), skill_type policy downgrade, O5 structural downgrade for domain Skills, and semantic-section synonym behaviors (O6).
+
 ## [0.1.0-rc.8] - 2026-07-13
 
 - **O5 — relax structural checks for large self-contained `domain` Skills**. A `skill_type=domain` Skill (e.g. a brand system embedding a full manual + chart atlas) must group its `references/` into sub-folders, so nested references are downgraded from WARNING to NOTE for `domain` (still WARNING for tool/meta/undeclared). Likewise the `interaction and onboarding` keyword policy (failure-recovery / progressive-disclosure wording) is downgraded to NOTE for `domain`, since one-shot generation Skills don't run that interaction flow. This stops compliant large domain Skills from being dragged to CONCERNS by inapplicable structural rules.

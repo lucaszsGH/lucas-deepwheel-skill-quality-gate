@@ -4,6 +4,7 @@ from __future__ import annotations
 from hashlib import sha256
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -32,15 +33,31 @@ assert scanner_spec.loader is not None
 scanner_spec.loader.exec_module(quality_gate_scanner)
 
 
-def run_gate(*args: str, executable: bool = False) -> subprocess.CompletedProcess[str]:
+def run_gate(
+    *args: str,
+    executable: bool = False,
+    env: dict[str, str | None] | None = None,
+) -> subprocess.CompletedProcess[str]:
     command = [str(SCANNER)] if executable else ["python3", str(SCANNER)]
     command.extend(args)
+    # env=None → inherit os.environ (unchanged behavior). When provided, apply the
+    # given overrides on top of os.environ; a value of None removes that key so a
+    # test can assert the "variable not set" branch deterministically.
+    run_env: dict[str, str] | None = None
+    if env is not None:
+        run_env = {**os.environ}
+        for key, value in env.items():
+            if value is None:
+                run_env.pop(key, None)
+            else:
+                run_env[key] = value
     return subprocess.run(
         command,
         cwd=ROOT,
         text=True,
         capture_output=True,
         check=False,
+        env=run_env,
     )
 
 
@@ -1548,6 +1565,220 @@ class AudiencePerspectiveStageReportTests(unittest.TestCase):
                 "VISUAL ASSET STALE",
                 "default self-audit must only be non-clean via fingerprint drift",
             )
+
+
+# ── O6：命名前缀 / skill_type 降级 / O5 结构降级 / CORE 同义词的回归覆盖 ──────
+#
+# 关键约束：POLICY / 「interaction and onboarding」降级用的是全树扫描文本
+# (scan_tree(skill))。真 Skill 的 copytree 无法让 POLICY finding 触发，因为它自带的
+# scripts/skill_quality_gate.py 逐字含每个策略词条。所以策略类断言必须用一个「不含
+# 这些词条」的新造最小 Skill（build_minimal_skill）；结构类（references 嵌套）与
+# CORE 同义词只读 SKILL.md/结构，可复用 copy_skill。
+
+TOOL_ONLY_POLICY_TITLES = (
+    "missing or weak new user capability preflight",
+    "missing or weak token budget policy",
+    "missing or weak companion Skill routing",
+    "missing or weak independent product entry",
+    "missing or weak interaction and onboarding",
+)
+
+
+def build_minimal_skill(temp: Path, skill_type: str | None, *, name: str = "acme-x-tool") -> Path:
+    """新造一个低风险最小 Skill，其全部文本刻意不含工具类策略词条，
+    从而让 POLICY finding 真正触发，可按 skill_type 校验其严重度。"""
+    target = temp / name
+    (target / "agents").mkdir(parents=True)
+    (target / "references").mkdir()
+    (target / "SKILL.md").write_text(
+        "---\n"
+        f"name: {name}\n"
+        'description: "Use when auditing a Skill. Do not use for unrelated tasks."\n'
+        "---\n\n"
+        "# Gate\n\nThis Skill audits a target Skill.\n"
+        "```bash\necho run\n```\n",
+        encoding="utf-8",
+    )
+    (target / "references" / "guide.md").write_text(
+        "# Guide\nMinimal reference.\n", encoding="utf-8"
+    )
+    (target / "agents" / "openai.yaml").write_text("name: gate\n", encoding="utf-8")
+    profile = {"schema_version": 1, "risk_level": "low", "risk_context": "meta_audit"}
+    if skill_type is not None:
+        profile["skill_type"] = skill_type
+    (target / "agents" / "risk-profile.json").write_text(
+        json.dumps(profile), encoding="utf-8"
+    )
+    return target
+
+
+def severity_by_title(target: Path, *extra: str) -> dict[str, str]:
+    payload = json.loads(run_gate(str(target), "--json", *extra).stdout)
+    return {f["title"]: f["severity"] for f in payload["findings"]}
+
+
+# O6.1 命名前缀检查两态
+class NamingPrefixConventionTests(unittest.TestCase):
+    def test_naming_prefix_warns_when_set_and_name_off_convention(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "acme-some-tool"
+            shutil.copytree(SKILL, target)
+            md = target / "SKILL.md"
+            md.write_text(
+                md.read_text(encoding="utf-8").replace(
+                    "name: " + SKILL_NAME, "name: acme-some-tool", 1
+                ),
+                encoding="utf-8",
+            )
+            result = run_gate(
+                str(target),
+                "--json",
+                env={"SKILL_QUALITY_GATE_NAME_PREFIX": "lucas-deepwheel-"},
+            )
+        payload = json.loads(result.stdout)
+        naming = [
+            f
+            for f in payload["findings"]
+            if f["title"]
+            == "Skill name does not follow the configured naming convention"
+        ]
+        self.assertEqual([f["severity"] for f in naming], ["warning"])
+        self.assertIn("lucas-deepwheel-", naming[0]["detail"])
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+
+    def test_naming_prefix_warns_when_unset_is_note(self) -> None:
+        result = run_gate(
+            str(SKILL), "--json", env={"SKILL_QUALITY_GATE_NAME_PREFIX": None}
+        )
+        payload = json.loads(result.stdout)
+        notes = [
+            f
+            for f in payload["findings"]
+            if f["title"] == "no naming convention configured"
+        ]
+        self.assertEqual([f["severity"] for f in notes], ["note"])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_naming_prefix_clean_when_set_and_name_follows(self) -> None:
+        result = run_gate(
+            str(SKILL),
+            "--json",
+            env={"SKILL_QUALITY_GATE_NAME_PREFIX": "lucas-deepwheel-"},
+        )
+        payload = json.loads(result.stdout)
+        naming = [
+            f
+            for f in payload["findings"]
+            if "naming convention" in f["title"]
+            or f["title"] == "no naming convention configured"
+        ]
+        self.assertEqual(naming, [])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+# O6.2 skill_type=domain 对工具类 POLICY 降级为 NOTE；tool/undeclared 保持 WARNING
+class SkillTypePolicyDowngradeTests(unittest.TestCase):
+    def test_tool_only_policy_downgrades_to_note_for_domain(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = build_minimal_skill(Path(temp), "domain")
+            sev = severity_by_title(target)
+        for title in TOOL_ONLY_POLICY_TITLES:
+            self.assertEqual(sev.get(title), "note", title)
+        # capability claims 不在工具类白名单：即便 domain 也保持 WARNING（不误降）。
+        self.assertEqual(sev.get("missing or weak capability claims"), "warning")
+
+    def test_tool_only_policy_stays_warning_for_tool(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = build_minimal_skill(Path(temp), "tool")
+            sev = severity_by_title(target)
+        for title in TOOL_ONLY_POLICY_TITLES:
+            self.assertEqual(sev.get(title), "warning", title)
+
+    def test_tool_only_policy_stays_warning_for_undeclared(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = build_minimal_skill(Path(temp), None)
+            sev = severity_by_title(target)
+        for title in TOOL_ONLY_POLICY_TITLES:
+            self.assertEqual(sev.get(title), "warning", title)
+
+
+# O6.3 O5 结构降级：references 嵌套 + 缺 onboarding 关键词（恢复/渐进）
+class StructureAndOnboardingDowngradeTests(unittest.TestCase):
+    def _nested_severity(self, skill_type: str | None) -> list[str]:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            set_skill_type(target, skill_type)
+            nested = target / "references" / "nested"
+            nested.mkdir()
+            (nested / "deep.md").write_text("# deep\n", encoding="utf-8")
+            payload = json.loads(run_gate(str(target), "--json").stdout)
+        return [
+            f["severity"]
+            for f in payload["findings"]
+            if f["title"] == "references are nested"
+        ]
+
+    def test_o5_references_nested_note_for_domain(self) -> None:
+        self.assertEqual(self._nested_severity("domain"), ["note"])
+
+    def test_o5_references_nested_warning_for_tool(self) -> None:
+        self.assertEqual(self._nested_severity("tool"), ["warning"])
+
+    def test_o5_references_nested_warning_for_undeclared(self) -> None:
+        self.assertEqual(self._nested_severity(None), ["warning"])
+
+    def test_o5_onboarding_keyword_note_for_domain(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = build_minimal_skill(Path(temp), "domain")
+            payload = json.loads(run_gate(str(target), "--json").stdout)
+        onboarding = [
+            f
+            for f in payload["findings"]
+            if f["title"] == "missing or weak interaction and onboarding"
+        ]
+        self.assertEqual([f["severity"] for f in onboarding], ["note"])
+        # 缺口明细含 onboarding 关键词（恢复/渐进）——确证审的是交互恢复这一维。
+        self.assertIn("恢复", onboarding[0]["detail"])
+        self.assertIn("渐进", onboarding[0]["detail"])
+
+    def test_o5_onboarding_keyword_warning_for_tool(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = build_minimal_skill(Path(temp), "tool")
+            payload = json.loads(run_gate(str(target), "--json").stdout)
+        onboarding = [
+            f["severity"]
+            for f in payload["findings"]
+            if f["title"] == "missing or weak interaction and onboarding"
+        ]
+        self.assertEqual(onboarding, ["warning"])
+
+
+# O6.4 CORE_GROUPS 同义词：换措辞不误报缺章节
+class CoreSectionSynonymTests(unittest.TestCase):
+    def test_core_groups_accept_synonyms(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = copy_skill(Path(temp))
+            md = target / "SKILL.md"
+            md.write_text(
+                "---\n"
+                "name: " + SKILL_NAME + "\n"
+                'description: "Use when auditing a Skill. Do not use for unrelated tasks."\n'
+                "---\n\n"
+                "# 门禁\n\n"
+                "## 使用边界\n略\n"  # group 1 同义（另有 description 的 Use when）
+                "## 不使用\n略\n"  # group 2 同义（另有 description 的 Do not）
+                "## 生成流程\n略\n"  # group 3：生成流程 ≈ 标准流程
+                "## 安全边界\n略\n"  # group 4
+                "## 交付前自检\n略\n",  # group 5：交付前自检 ≈ 完成前验收
+                encoding="utf-8",
+            )
+            payload = json.loads(run_gate(str(target), "--json").stdout)
+        core = [
+            f
+            for f in payload["findings"]
+            if f["title"] == "SKILL.md may miss a core section"
+        ]
+        self.assertEqual(core, [], core)
 
 
 if __name__ == "__main__":

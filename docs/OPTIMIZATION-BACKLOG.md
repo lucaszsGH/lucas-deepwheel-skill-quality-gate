@@ -8,18 +8,14 @@
 ### ✅ O5 已修（2026-07-13,rc.8）· 自动测试并入 O6
 - references-nested 与 interaction-and-onboarding 关键词策略对 `skill_type=domain` 降 WARNING→NOTE(tool/meta/未声明仍 WARNING);skill_type 读取提前到 references 检查前。brand-apply 实证转 **CLEAN**、72 测试无回归。**自动测试待补**(domain 降 NOTE / tool 保持 WARNING 两态),并入 O6。
 
-### O6 · 新检查(命名/skill_type/同义章节)缺自动测试（P1，工程质量）
-- F2/F3/F4 三项新行为(见已修)当前靠手动验 + 24 原测试兜底,未加专门单测。
-- **改法建议**：给 tests/ 补：①命名前缀设/未设两态 ②domain skill 工具类检查降 NOTE ③CORE_GROUPS 同义词识别。命名测试需给 `run_gate` 加 `env=` 参数支持。
+### ✅ O6 已修（2026-07-13,1.0.0）· 12 个自动测试
+- 补 12 测：命名前缀设/未设两态 · skill_type=domain 工具类 5 项(含 interaction onboarding)降 NOTE · O5 references-nested / onboarding 对 domain 降 NOTE、tool 保持 WARNING · CORE_GROUPS 同义词零误报。给 `run_gate` 加 `env=` 参数。O5 的自动测试也含在内。
 
-### O7 · description/README 未提命名检查（P2，公开面同步欠账）
-- 命名规则检查是新增的用户可见维度,但 SKILL.md frontmatter 的 `description` 与 README 尚未列它。当前 `PUBLIC-SURFACE-REVIEW.json` 按 `internal_only/NO_CHANGE_REQUIRED` 止血(双语介绍图确不需改),文字同步推迟。
-- **改法建议**：并入下一轮 token/onboarding 公开面刷新,届时按 `user_visible/UPDATED` 正式复核,补 description/README 文字并更新双语图指纹。
-- **发现**：2026-07-13 合并 Codex 公开面闸后止血。
+### ✅ O7 已修（2026-07-13,1.0.0）· description/README 补命名检查
+- SKILL.md frontmatter `description` 加 naming-convention / 命名规则;README.md + README.zh-CN.md 各补一行命名规则检查(对照 `SKILL_QUALITY_GATE_NAME_PREFIX`)。manifest 按 `internal_only/NO_CHANGE_REQUIRED` 签(公开面文字补充、介绍图不改)。
 
-### O8 · CHANGELOG 版本归属待理（P2，发版纪律）
-- 命名/skill_type/同义章节三条今晚暂记在 `rc.6` 段下,但 rc.6 实为 Codex 的 installer 修复。下一轮正式发版时应把这三条归入独立的 rc.7/Unreleased 段。
-- **发现**：2026-07-13 rebase 解冲突时并入。
+### ✅ O8 已理（2026-07-13,1.0.0）· CHANGELOG 版本归属
+- 判定：命名/skill_type/同义 3 条随 rc.6 批次(a0782da)同批推送,CHANGELOG 归 rc.6 成立、不强移;1.0.0 为首个正式版,收敛 rc.1–rc.8 全部能力,历史段保持。
 
 ## 已修
 
