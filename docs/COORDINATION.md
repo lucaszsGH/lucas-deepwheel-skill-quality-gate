@@ -36,7 +36,10 @@
 **与 Codex 的 public-surface 闸无残留冲突**（manifest 已正确签 UPDATED）。
 
 ### 2026-07-13 · Claude（张帅）· rc.8（O5 修复,追加）
-references-nested / interaction-and-onboarding 关键词策略对 `skill_type=domain` 降 WARNING→NOTE(tool/meta/未声明仍 WARNING),让大型自包含域 Skill(如 brand-apply)不被结构规则拖成 CONCERNS(brand-apply 已转 CLEAN)。manifest 按 `internal_only/NO_CHANGE_REQUIRED` 签(O5 是内部检查精化、介绍图无需改)。门禁现处 **rc.8**。Codex 后续改动照常在本文件登记范围。
+references-nested / interaction-and-onboarding 关键词策略对 `skill_type=domain` 降 WARNING→NOTE(tool/meta/未声明仍 WARNING),让大型自包含域 Skill(如 brand-apply)不被结构规则拖成 CONCERNS(brand-apply 已转 CLEAN)。manifest 按 `internal_only/NO_CHANGE_REQUIRED` 签(O5 是内部检查精化、介绍图无需改)。
+
+### 2026-07-13 · Claude（张帅）· 1.0.0 首个正式版发布
+清完 backlog 全部尾巴 + 发正式版:O6 补 12 个自动测试、O7 在 description/双语 README 补命名检查、O8 版本归属已理(判定归 rc.6 成立)。VERSION rc.8→**1.0.0**,打 tag `v1.0.0` + GitHub Release,manifest 按 `internal_only/NO_CHANGE_REQUIRED` 签。86 测试全绿、自审 CLEAN。本机已软链装到 `~/.claude/skills/`(门禁 + brand-apply)。**门禁现处 1.0.0 正式版,backlog 全清。** Codex 后续改动照常在本文件登记范围。
 
 ## 约定
 - 改共享文件前先在本文件登记认领 + 范围。
