@@ -96,7 +96,9 @@ GitHub 发布准备检查
 15. 所有高风险 Skill 必须声明可执行的行为安全合同和发布包测试路径，并覆盖同意、数据主体、最小输入、安全预检、停止态、阻断输出和来源追溯七类回归标识；门禁只静态核验，不执行不受信任的目标代码。
 16. 如目标是 Git 仓库，读取 `references/release-state-reconciliation.md`，运行 `scripts/reconcile_release_state.py`，区分 MATCH / DRIFT / NOT PUSHED / PR OPEN / ACTIONS FAILED / INSTALL OUTDATED。
 17. 读取 `references/public-surface-consistency.md`；用户可见能力变化必须同步复核中英文 README、Hero/Workflow SVG 与 PNG、示例、安装说明和 Changelog。未更新或未记录无需更新原因时返回 `VISUAL ASSET STALE`。
-18. Quality Gate 只负责发现、要求修复和复核。Lucas 确认后，由 AI 或关联设计/文档能力执行修改，再重新运行门禁；门禁不得自己修改、自己通过。
+18. 对外内容生成前必须建立机器可读的**生产契约**：锁定终端用户、使用场景、希望用户相信什么、看完采取什么动作、双语范围、可编辑源与渲染格式；以**消费者视角**先写内容，再进入视觉生成。中英文是并列发布面，不允许只修先报错的一种语言。
+19. 有品牌规范时，生产契约必须声明实际使用的设计系统并完成品牌复核；DeepWheel 公开物料固定使用 `lucas-deepwheel-brand-apply`，先按品牌 Skill 生成，再由门禁核对品牌原则、双语 SVG/PNG 和内容指纹。没有品牌系统时明确写 `NOT_APPLICABLE`，不得伪造已复核。
+20. Quality Gate 只负责发现、要求修复和复核。Lucas 确认后，由 AI 或关联设计/文档能力执行修改，再重新运行门禁；门禁不得自己修改、自己通过。
 
 ## 机器门禁
 
@@ -187,6 +189,8 @@ python3 scripts/skill_quality_gate.py /path/to/target-skill --report
 - 是否区分 Skill 本体、发布包和真实行为测试；
 - 是否核验本地源码、GitHub main/PR、Actions、VERSION/Tag/Release 和安装版状态；
 - 用户可见能力变化后，公开文案与中英文可编辑/渲染图片是否已经复核；
+- 是否先建立消费者视角生产契约，并把中英文作为并列发布面一次性核验；
+- 品牌物料是否声明并实际使用对应品牌 Skill，而不是只在成品上补一个品牌名；
 - 如公开介绍未同步，是否输出 `VISUAL ASSET STALE` 并阻止 CLEAN；
 - 是否区分已核实、推断和待确认；
 - 是否给出明确严重程度和可靠退出码；

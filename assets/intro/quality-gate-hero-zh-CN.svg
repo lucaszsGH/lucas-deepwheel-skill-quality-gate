@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
 <title id="title">DeepWheel Skill 质量门禁 GitHub 中文介绍</title>
-<desc id="desc">你做的 Skill，别人装上能一次跑通吗？从动手到公开，给你一把尺子和一份照着就能改的清单。</desc>
+<desc id="desc">你做的 Skill，别人装上能一次跑通吗？只读核验让每个公开面都同步，并给出带证据、可照着改的清单。</desc>
 
 <defs>
   <radialGradient id="aura" cx="100%" cy="0%" r="135%">
@@ -34,7 +34,7 @@
 <text x="112" y="524" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="27" fill="#42474F" letter-spacing="-.15"><tspan x="112" dy="0">有把尺子了——从你动手那刻就陪你量起，</tspan><tspan x="112" dy="44">直到它够格公开，再递你一份照着就能改的清单。</tspan></text>
 <line x1="112" y1="654" x2="980" y2="654" stroke="#E1E6EE" stroke-width="1.5"/>
 <text x="112" y="702" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="15" fill="#5C626B" letter-spacing="0.6">给地图   ·   定视角   ·   全体检   ·   出清单</text>
-<text x="112" y="756" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#5C626B">静态核验，不动你一行代码——每条判定都带证据，改不改你说了算。</text>
+<text x="112" y="756" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#5C626B">只读核验，让每个公开面都同步。每条判定带证据，改不改由你决定。</text>
 
 <!-- Editorial material-package composition: one blue structural spine, no internal shadows. -->
 <path d="M1030 310 H1362 L1418 366 V724 H1030 Z" fill="#F2F5F9" stroke="#E1E6EE" stroke-width="1.5"/>
@@ -57,8 +57,8 @@
 <text x="1110" y="552" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="17" fill="#101722">埋雷</text>
 <text x="1392" y="552" text-anchor="end" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#42474F">已排查</text>
 <line x1="1110" y1="580" x2="1392" y2="580" stroke="#E1E6EE" stroke-width="1"/>
-<text x="1110" y="618" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="17" fill="#101722">发布就绪</text>
-<text x="1392" y="618" text-anchor="end" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#42474F">达标</text>
+<text x="1110" y="618" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="17" fill="#101722">公开面</text>
+<text x="1392" y="618" text-anchor="end" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="400" font-size="16" fill="#42474F">已同步</text>
 
 <line x1="1110" y1="648" x2="1392" y2="648" stroke="#E1E6EE" stroke-width="1"/>
 <text x="1251" y="676" text-anchor="middle" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.6">判定</text>

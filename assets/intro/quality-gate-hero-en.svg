@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
 <title id="title">DeepWheel Skill Quality Gate GitHub introduction</title>
-<desc id="desc">Will that Skill run first-try when someone else installs it? A ruler from first line to ship, plus a fix-list you can follow.</desc>
+<desc id="desc">Will that Skill run first-try for someone else? Read-only checks keep every surface in sync and return an evidence-backed fix list.</desc>
 
 <defs>
   <radialGradient id="aura" cx="100%" cy="0%" r="135%">
@@ -34,7 +34,7 @@
 <text x="112" y="516" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="400" font-size="22" fill="#42474F" letter-spacing="-.1"><tspan x="112" dy="0">Now you've got a ruler: it measures your Skill</tspan><tspan x="112" dy="34">from the first line you write until it's fit to ship —</tspan><tspan x="112" dy="34">then hands you a fix-list you can actually follow.</tspan></text>
 <line x1="112" y1="654" x2="980" y2="654" stroke="#E1E6EE" stroke-width="1.5"/>
 <text x="112" y="702" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="15" fill="#5C626B" letter-spacing="1.2">GUIDE   ·   LENS   ·   CHECK-UP   ·   FIX-LIST</text>
-<text x="112" y="756" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="400" font-size="15" fill="#5C626B">Static checks only — it never touches your code. Every verdict comes with evidence; what to fix is your call.</text>
+<text x="112" y="756" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="400" font-size="15" fill="#5C626B">Read-only checks. Keep every surface in sync. Every verdict has evidence; every fix stays your call.</text>
 
 <!-- Editorial material-package composition: one blue structural spine, no internal shadows. -->
 <path d="M1030 310 H1362 L1418 366 V724 H1030 Z" fill="#F2F5F9" stroke="#E1E6EE" stroke-width="1.5"/>
@@ -57,8 +57,8 @@
 <text x="1110" y="552" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="17" fill="#101722">Landmines</text>
 <text x="1392" y="552" text-anchor="end" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="400" font-size="16" fill="#42474F">Clear</text>
 <line x1="1110" y1="580" x2="1392" y2="580" stroke="#E1E6EE" stroke-width="1"/>
-<text x="1110" y="618" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="17" fill="#101722">Ship-ready</text>
-<text x="1392" y="618" text-anchor="end" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="400" font-size="16" fill="#42474F">Pass</text>
+<text x="1110" y="618" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="17" fill="#101722">Surfaces</text>
+<text x="1392" y="618" text-anchor="end" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="400" font-size="16" fill="#42474F">In sync</text>
 
 <line x1="1110" y1="648" x2="1392" y2="648" stroke="#E1E6EE" stroke-width="1"/>
 <text x="1251" y="676" text-anchor="middle" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="12" fill="#5C626B" letter-spacing="1.9">VERDICT</text>

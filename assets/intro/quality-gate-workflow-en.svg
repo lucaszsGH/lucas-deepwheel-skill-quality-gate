@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
 <title id="title">Skill Quality Gate workflow</title>
-<desc id="desc">From your first line to launch day — four passes, and you'll know if it's any good.</desc>
+<desc id="desc">Four consumer-focused passes check quality, reconcile GitHub Actions and the installed copy, then return a fix-first report.</desc>
 
 <defs>
   <radialGradient id="aura" cx="100%" cy="0%" r="135%">
@@ -42,7 +42,7 @@
 <rect x="548" y="306" width="548" height="66" rx="26" fill="#0071E3"/>
 <rect x="548" y="346" width="548" height="26" fill="#0071E3"/>
 <text x="592" y="349" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="15" fill="#FFFFFF" letter-spacing="2.4">QUALITY GATE</text>
-<text x="592" y="420" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">01</tspan><tspan dx="28">Set the goal, grab the 'good Skill' map</tspan></text><text x="592" y="478" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">02</tspan><tspan dx="28">One check-up: install·token·trap·ship</tspan></text><text x="592" y="536" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">03</tspan><tspan dx="28">Get the list, ranked by fix-first</tspan></text><text x="592" y="594" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">04</tspan><tspan dx="28">Fix, pass, paste into PR as proof</tspan></text>
+<text x="592" y="420" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">01</tspan><tspan dx="28">Set the goal, grab the 'good Skill' map</tspan></text><text x="592" y="478" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">02</tspan><tspan dx="28">Check install, token, traps, and safety</tspan></text><text x="592" y="536" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">03</tspan><tspan dx="28">Reconcile GitHub, Actions, install</tspan></text><text x="592" y="594" font-family="'Avenir Next','Inter','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">04</tspan><tspan dx="28">Check public surfaces; get fix-first order</tspan></text>
 
 <path d="M 1096 472 C 1130 472 1140 472 1168 472" fill="none" stroke="#5C626B" stroke-width="2" marker-end="url(#arrow)"/>
 

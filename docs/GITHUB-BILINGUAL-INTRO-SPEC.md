@@ -6,6 +6,8 @@ Status: reviewed bilingual repository-visual specification.
 
 The first screen serves a new GitHub visitor, a potential Skill user, and a contributor evaluating scope. Within about ten seconds it must explain what the Skill does, the evidence or output it produces, and where its automation boundary stops.
 
+The production order is fixed: define the terminal user and use scenario, write the belief and next action from the consumer's point of view, apply `lucas-deepwheel-brand-apply`, edit the bilingual SVG sources, render the PNG derivatives, then run the consumer/brand contract check and the full Quality Gate. Do not start from decoration or retrofit a consumer story after rendering.
+
 ## Language and asset strategy
 
 - English README uses the English pair; Chinese README uses the Chinese pair.
@@ -76,3 +78,5 @@ Use concise, meaningful alt text. Do not repeat the entire image copy in alt att
 - sensitive-value, PII, local-path, and raw-residue scan;
 - Claude brand co-review before template lock;
 - GitHub Actions on the pull request and merged main.
+
+The machine-readable consumer and brand production contract lives in `docs/PUBLIC-SURFACE-REVIEW.json`. Rendering uses `scripts/render-intro-assets.py`; `--write` requires an explicit Brand Apply declaration and consumer-review acknowledgement.

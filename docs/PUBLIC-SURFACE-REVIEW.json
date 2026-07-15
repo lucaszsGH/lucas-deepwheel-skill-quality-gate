@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "skill_name": "lucas-deepwheel-skill-quality-gate",
-  "capability_change": "internal_only",
-  "decision": "NO_CHANGE_REQUIRED",
-  "reason": "1.0.0 first stable release. O7 documents the naming-convention check in the Skill description and the bilingual READMEs; O6 adds automated tests. These are public-surface wording additions plus test coverage; the gate workflow narrative and bilingual introduction visuals are unchanged, so no image update is required.",
-  "reviewed_skill_sha256": "29e8a67b32e04a79cdfb4bd5fe1ce05b5016d337240c6c888228b847595f0023",
+  "capability_change": "user_visible",
+  "decision": "UPDATED",
+  "reason": "The bilingual first-screen content and workflow now reflect the complete quality, release-state and public-surface capability from the consumer point of view, with a reproducible DeepWheel Brand Apply generation contract.",
+  "reviewed_skill_sha256": "bbd89d960616f247ee561219a5a47e7eed60b7e5a8b2c228ab7123ea1fede11c",
   "public_files": [
     "README.md",
     "README.zh-CN.md",
@@ -18,8 +18,54 @@
     "assets/intro/quality-gate-workflow-en.svg",
     "assets/intro/quality-gate-workflow-en.png",
     "assets/intro/quality-gate-workflow-zh-CN.svg",
+    "assets/intro/quality-gate-workflow-zh-CN.png",
+    "docs/GITHUB-BILINGUAL-INTRO-SPEC.md",
+    "assets/intro/README.md",
+    "assets/intro/source/visual-tokens.json",
+    "scripts/render-intro-assets.py"
+  ],
+  "public_surface_sha256": "c28ce783b303215a0ab2aa538ca2679d90f4a4c38e5eec02baf1f5e6a083f135",
+  "updated_assets": [
+    "assets/intro/quality-gate-hero-en.svg",
+    "assets/intro/quality-gate-hero-en.png",
+    "assets/intro/quality-gate-hero-zh-CN.svg",
+    "assets/intro/quality-gate-hero-zh-CN.png",
+    "assets/intro/quality-gate-workflow-en.svg",
+    "assets/intro/quality-gate-workflow-en.png",
+    "assets/intro/quality-gate-workflow-zh-CN.svg",
     "assets/intro/quality-gate-workflow-zh-CN.png"
   ],
-  "public_surface_sha256": "edc07b9bcee2a7e4aabb94c3c4ca1f09dda1a40e0908ddf236660616bdeb307c",
-  "updated_assets": []
+  "production_contract": {
+    "terminal_user": {
+      "en": "A Skill builder or maintainer deciding whether another person can install, understand and trust the Skill.",
+      "zh-CN": "准备判断一个 Skill 能否让别人顺利安装、看懂并信任的开发者或维护者。"
+    },
+    "use_scenario": {
+      "en": "Before installation or public release, review quality, release state and bilingual public surfaces in one evidence-backed pass.",
+      "zh-CN": "在安装或公开发布前，用一次有证据的核验同时检查质量、发布状态和双语公开面。"
+    },
+    "desired_belief": {
+      "en": "This read-only gate finds what could break first use, keeps every release surface aligned and explains why.",
+      "zh-CN": "这道只读门禁能找出影响首次使用的问题，让每个发布公开面保持同步，并说明原因。"
+    },
+    "next_action": {
+      "en": "Run the gate, fix the highest-priority evidence-backed item, rerun, and attach the passing report to the PR.",
+      "zh-CN": "运行门禁，先修最高优先级且有证据的问题，复跑通过后把报告附到 PR。"
+    },
+    "content_languages": [
+      "en",
+      "zh-CN"
+    ],
+    "design_system": "lucas-deepwheel-brand-apply",
+    "brand_principles": [
+      "precise",
+      "restrained",
+      "credible",
+      "ordered"
+    ],
+    "editable_source": "SVG",
+    "rendered_output": "PNG",
+    "consumer_reviewed": true,
+    "brand_reviewed": true
+  }
 }

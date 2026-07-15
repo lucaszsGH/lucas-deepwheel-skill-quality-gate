@@ -17,6 +17,8 @@ SKILL_NAME = "lucas-deepwheel-skill-quality-gate"
 SKILL = ROOT / "skills" / SKILL_NAME
 SCANNER = SKILL / "scripts" / "skill_quality_gate.py"
 RECONCILER = SKILL / "scripts" / "reconcile_release_state.py"
+SPECIFIC_VALIDATOR = ROOT / "scripts" / "validate-lucas-deepwheel-quality-gate.py"
+INTRO_RENDERER = ROOT / "scripts" / "render-intro-assets.py"
 BEHAVIOR_CASE_IDS = (
     "consent_missing",
     "data_subject_unconfirmed",
@@ -725,6 +727,82 @@ class QualityGateBehaviorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("VISUAL ASSET STALE", result.stdout)
         self.assertIn("bilingual editable/rendered asset update incomplete", result.stdout)
+
+    def test_public_surface_schema_requires_consumer_and_brand_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            target_skill = publication / "skills" / SKILL_NAME
+            refresh_public_surface_manifest(publication, target_skill)
+            manifest_path = publication / "docs" / "PUBLIC-SURFACE-REVIEW.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest.pop("production_contract", None)
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            result = run_gate(
+                str(target_skill),
+                "--publication-dir",
+                str(publication),
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("consumer and brand production contract missing", result.stdout)
+
+    def test_specific_validator_reports_every_bilingual_copy_gap(self) -> None:
+        required = {
+            "quality-gate-hero-en.svg": "Keep every surface in sync.",
+            "quality-gate-hero-zh-CN.svg": "让每个公开面都同步。",
+            "quality-gate-workflow-en.svg": "Reconcile GitHub, Actions, install",
+            "quality-gate-workflow-zh-CN.svg": "对账 GitHub、Actions、安装版",
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            publication = Path(temp) / "publication"
+            shutil.copytree(ROOT, publication)
+            intro = publication / "assets" / "intro"
+            for name, marker in required.items():
+                path = intro / name
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(marker, "synthetic missing copy"),
+                    encoding="utf-8",
+                )
+            result = subprocess.run(
+                [
+                    "python3",
+                    str(SPECIFIC_VALIDATOR),
+                    str(publication / "skills" / SKILL_NAME),
+                    str(publication),
+                ],
+                cwd=publication,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        for name in required:
+            self.assertIn(name, result.stdout)
+
+    def test_intro_renderer_check_passes_current_bilingual_assets(self) -> None:
+        result = subprocess.run(
+            ["python3", str(INTRO_RENDERER)],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("bilingual consumer and DeepWheel brand", result.stdout)
+
+    def test_intro_renderer_write_requires_brand_and_consumer_acknowledgements(self) -> None:
+        result = subprocess.run(
+            ["python3", str(INTRO_RENDERER), "--write"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("Brand Apply and consumer-review acknowledgements", result.stdout + result.stderr)
 
     def test_incomplete_publication_checklist_returns_concerns(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

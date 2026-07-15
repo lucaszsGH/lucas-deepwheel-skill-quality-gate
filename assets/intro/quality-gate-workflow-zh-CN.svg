@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
 <title id="title">Skill 质量门禁工作流</title>
-<desc id="desc">从第一行到发布那天，四步走完，你就知道它到底行不行。</desc>
+<desc id="desc">从使用者视角走四步：查质量、对账 GitHub Actions 与安装版，再拿一份按优先级排序的修复清单。</desc>
 
 <defs>
   <radialGradient id="aura" cx="100%" cy="0%" r="135%">
@@ -42,7 +42,7 @@
 <rect x="548" y="306" width="548" height="66" rx="26" fill="#0071E3"/>
 <rect x="548" y="346" width="548" height="26" fill="#0071E3"/>
 <text x="592" y="349" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="700" font-size="15" fill="#FFFFFF" letter-spacing="2.4">QUALITY GATE 门禁</text>
-<text x="592" y="420" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">01</tspan><tspan dx="28">定目标、拿『好 Skill』地图</tspan></text><text x="592" y="478" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">02</tspan><tspan dx="28">一遍全面体检：上手·token·埋雷·发布</tspan></text><text x="592" y="536" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">03</tspan><tspan dx="28">收清单：按『先改哪个』排序</tspan></text><text x="592" y="594" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">04</tspan><tspan dx="28">照着改，达标贴进 PR 作证</tspan></text>
+<text x="592" y="420" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">01</tspan><tspan dx="28">定目标、拿『好 Skill』地图</tspan></text><text x="592" y="478" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">02</tspan><tspan dx="28">查上手、token、埋雷和安全</tspan></text><text x="592" y="536" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">03</tspan><tspan dx="28">对账 GitHub、Actions、安装版</tspan></text><text x="592" y="594" font-family="'Avenir Next','PingFang SC','Inter',-apple-system,sans-serif" font-weight="600" font-size="22" fill="#101722"><tspan fill="#5C626B">04</tspan><tspan dx="28">查双语公开面，拿优先级清单</tspan></text>
 
 <path d="M 1096 472 C 1130 472 1140 472 1168 472" fill="none" stroke="#5C626B" stroke-width="2" marker-end="url(#arrow)"/>
 

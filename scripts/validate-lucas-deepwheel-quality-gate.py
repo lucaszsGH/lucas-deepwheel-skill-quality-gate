@@ -39,6 +39,8 @@ REQUIRED_TERMS = (
     "行为安全合同",
     "GitHub main",
     "VISUAL ASSET STALE",
+    "生产契约",
+    "消费者视角",
 )
 
 REQUIRED_SCANNER_TERMS = (
@@ -53,6 +55,7 @@ REQUIRED_SCANNER_TERMS = (
     "REQUIRED_HIGH_RISK_BEHAVIOR_CASES",
     "check_public_surface_review",
     "PUBLIC-SURFACE-REVIEW.json",
+    "PUBLIC_SURFACE_PRODUCTION_FIELDS",
     "VISUAL ASSET STALE",
     "high-risk behavior regression test file is missing",
     "high-risk behavior regression tests lack declared cases",
@@ -213,6 +216,32 @@ if publication is not None:
     }:
         fail("public-surface review manifest has an invalid decision pair")
 
+    surface_problems = []
+    production = surface_data.get("production_contract")
+    if not isinstance(production, dict):
+        surface_problems.append("production_contract is missing")
+    else:
+        for field in ("terminal_user", "use_scenario", "desired_belief", "next_action"):
+            value = production.get(field)
+            if not isinstance(value, dict):
+                surface_problems.append(f"production_contract.{field} is invalid")
+                continue
+            for language in ("en", "zh-CN"):
+                if not isinstance(value.get(language), str) or len(value.get(language, "").strip()) < 12:
+                    surface_problems.append(f"production_contract.{field}.{language} is incomplete")
+        if production.get("content_languages") != ["en", "zh-CN"]:
+            surface_problems.append("production_contract.content_languages must be en + zh-CN")
+        if production.get("design_system") != "lucas-deepwheel-brand-apply":
+            surface_problems.append("production_contract.design_system must use lucas-deepwheel-brand-apply")
+        if production.get("brand_principles") != ["precise", "restrained", "credible", "ordered"]:
+            surface_problems.append("production_contract.brand_principles do not match DeepWheel")
+        if production.get("editable_source") != "SVG" or production.get("rendered_output") != "PNG":
+            surface_problems.append("production_contract asset source/output pair must be SVG + PNG")
+        if production.get("consumer_reviewed") is not True:
+            surface_problems.append("consumer review is incomplete")
+        if production.get("brand_reviewed") is not True:
+            surface_problems.append("brand review is incomplete")
+
     intro = publication / "assets" / "intro"
     required_intro_copy = {
         "quality-gate-hero-en.svg": "Keep every surface in sync.",
@@ -223,9 +252,27 @@ if publication is not None:
     for name, marker in required_intro_copy.items():
         asset = intro / name
         if not asset.is_file():
-            fail(f"missing introduction asset: {name}")
-        if marker not in asset.read_text(encoding="utf-8"):
-            fail(f"introduction asset misses required copy: {name}")
+            surface_problems.append(f"missing introduction asset: {name}")
+        elif marker not in asset.read_text(encoding="utf-8"):
+            surface_problems.append(f"introduction asset misses required copy: {name}")
+
+    for relative in (
+        "docs/GITHUB-BILINGUAL-INTRO-SPEC.md",
+        "assets/intro/README.md",
+        "assets/intro/source/visual-tokens.json",
+        "scripts/render-intro-assets.py",
+    ):
+        if not (publication / relative).is_file():
+            surface_problems.append(f"public-surface generation file is missing: {relative}")
+
+    version = (publication / "VERSION").read_text(encoding="utf-8").strip()
+    for readme_name in ("README.md", "README.zh-CN.md"):
+        readme = publication / readme_name
+        if not readme.is_file() or version not in readme.read_text(encoding="utf-8")[:600]:
+            surface_problems.append(f"README status does not match VERSION: {readme_name}")
+
+    if surface_problems:
+        fail("public-surface validation failed: " + "; ".join(surface_problems))
     workflow = publication / ".github" / "workflows" / "validate.yml"
     if not workflow.is_file():
         fail("validation workflow is missing")

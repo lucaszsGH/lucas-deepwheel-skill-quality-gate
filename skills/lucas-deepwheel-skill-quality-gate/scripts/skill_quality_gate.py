@@ -215,6 +215,20 @@ PUBLIC_SURFACE_CORE_FILES = {
     "examples/example-prompts.md",
 }
 
+PUBLIC_SURFACE_PRODUCTION_FIELDS = (
+    "terminal_user",
+    "use_scenario",
+    "desired_belief",
+    "next_action",
+    "content_languages",
+    "design_system",
+    "brand_principles",
+    "editable_source",
+    "rendered_output",
+    "consumer_reviewed",
+    "brand_reviewed",
+)
+
 # ── 视角版 A（audience 视角）+ B（--stage）+ C（--report / 修复优先级）───────
 # audience 是「视角/尺子」轴，不是松紧轴：只切换「从谁的尺子审、审哪些关注点」，
 # 作用面仅限下面 9 个门面 check_id（FACADE_SET）；通用/结构/安全/critical/描述
@@ -433,7 +447,8 @@ def check_public_surface_review(
         ]
 
     problems: list[str] = []
-    if manifest.get("schema_version") != 1:
+    schema_version = manifest.get("schema_version")
+    if schema_version != 1:
         problems.append("schema_version")
     if skill_name and manifest.get("skill_name") != skill_name:
         problems.append("skill_name")
@@ -449,6 +464,42 @@ def check_public_surface_review(
         problems.append("reason")
     if manifest.get("reviewed_skill_sha256") != tree_sha256(skill):
         problems.append("capability fingerprint changed")
+
+    production = manifest.get("production_contract")
+    if not isinstance(production, dict):
+        problems.append("consumer and brand production contract missing")
+    else:
+        for field in PUBLIC_SURFACE_PRODUCTION_FIELDS:
+            if field not in production:
+                problems.append("production_contract." + field)
+        languages = production.get("content_languages")
+        if (
+            not isinstance(languages, list)
+            or any(not isinstance(language, str) for language in languages)
+            or not {"en", "zh-CN"}.issubset(set(languages))
+        ):
+            problems.append("production_contract.content_languages")
+            languages = []
+        for field in ("terminal_user", "use_scenario", "desired_belief", "next_action"):
+            value = production.get(field)
+            if not isinstance(value, dict) or any(
+                not isinstance(value.get(language), str) or len(value.get(language, "").strip()) < 12
+                for language in languages
+            ):
+                problems.append("production_contract." + field)
+        if not isinstance(production.get("design_system"), str) or not production.get("design_system", "").strip():
+            problems.append("production_contract.design_system")
+        brand_principles = production.get("brand_principles")
+        if not isinstance(brand_principles, list) or len(brand_principles) < 3:
+            problems.append("production_contract.brand_principles")
+        if production.get("editable_source") != "SVG":
+            problems.append("production_contract.editable_source")
+        if production.get("rendered_output") != "PNG":
+            problems.append("production_contract.rendered_output")
+        if production.get("consumer_reviewed") is not True:
+            problems.append("production_contract.consumer_reviewed")
+        if production.get("design_system") != "NOT_APPLICABLE" and production.get("brand_reviewed") is not True:
+            problems.append("production_contract.brand_reviewed")
 
     public_files = manifest.get("public_files")
     if not isinstance(public_files, list) or any(not isinstance(item, str) for item in public_files):
